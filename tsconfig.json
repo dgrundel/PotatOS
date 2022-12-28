@@ -5,7 +5,7 @@
     "compilerOptions": {
         "outDir": "dist",
         "target": "ES2015",
-        "module": "commonjs",
+        "module": "ESNext",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
