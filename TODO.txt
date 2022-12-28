@@ -1,0 +1,8 @@
+commands
+    cat
+    nano
+    
+    ls
+    mv
+    rm
+    cp

@@ -17,8 +17,8 @@ export class Chunk {
 }
 
 export class Chunker {
-    readonly chunks: Chunk[] = [];
-    readonly delimiters: Record<string, boolean>;
+    private readonly chunks: Chunk[] = [];
+    private readonly delimiters: Record<string, boolean>;
 
     buffer: string = '';
     inEscape: boolean = false;
@@ -41,8 +41,9 @@ export class Chunker {
         }
     }
 
-    getChunks(): Chunk[] {
-        return this.chunks.slice();
+    flush(): Chunk[] {
+        this.flushChunk();
+        return this.chunks.splice(0);
     }
 
     private reset(): void {
@@ -95,8 +96,9 @@ export class Chunker {
             return;
         }
 
-        // white space
-        if (/\s/.test(ch)) {
+        // char is white space
+        const charIsWhitespace = /\s/.test(ch);
+        if (charIsWhitespace) {
             if (this.inDoubleQuote) {
                 this.buffer += ch;
                 return;
@@ -111,6 +113,13 @@ export class Chunker {
             
             this.inWhitespace = true;
             this.buffer += ch;
+            return;
+        }
+        
+        // char is not whitespace, but prev char was whitespace
+        if (!charIsWhitespace && this.inWhitespace) {
+            // flush a whitespace chunk
+            this.flushChunk();
         }
         
         // chunk delimiter characters
