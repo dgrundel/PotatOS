@@ -8,7 +8,8 @@ const ENV_KEY_TEST_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 const ENV = {
     PROMPT: '>',
-    HISTORY_MAX: 100
+    HISTORY_MAX: 100,
+    USER: 'p0tat0luv3r'
 };
 const ALIAS = {
     printenv: 'env'
