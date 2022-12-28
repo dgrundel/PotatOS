@@ -18,10 +18,21 @@ let HISTORY = [];
 const COMMANDS = {
     alias: {
         description: 'List and create aliases for commands.',
-        fn: () => {
-            Object.keys(ALIAS).sort().forEach(key => {
-                println(key + '=' + ALIAS[key]);
-            });
+        fn: (...args) => {
+
+            if (args.length > 0) {
+                const { pairs, errors } = parseEqPairs(args);
+            
+                errors.forEach(err => println(err));
+                Object.keys(pairs).forEach(key => {
+                    ALIAS[key] = pairs[key];
+                });
+
+            } else {
+                Object.keys(ALIAS).sort().forEach(key => {
+                    println(key + '=' + ALIAS[key]);
+                });
+            }
         }
     },
     echo: {
@@ -64,34 +75,12 @@ const COMMANDS = {
     set: {
         description: 'Set an environment value.',
         fn: (...args) => {
-            let i = args.length - 1;
-            while (i > 0) {
-                let key = args[i-2],
-                    eq = args[i-1],
-                    value = args[i];
-
-                // for blank values, e.g. "key="
-                if (value === '=' && eq !== '=') {
-                    key = eq;
-                    eq = value;
-                    value = '';
-                    i = i-2;
-                } else {
-                    i = i-3
-                }
-
-                if (!key || (eq !== '=')) {
-                    printerr('Syntax error: Set variables using "key=value" syntax. Got ', key, eq, value);
-                    continue;
-                }
-
-                if (!ENV_KEY_TEST_PATTERN.test(key)) {
-                    printerr(`Error: Variable "${key}" must match pattern ${ENV_KEY_TEST_PATTERN.toString()}.`);
-                    continue;
-                }
-
-                ENV[key] = value;
-            }
+            const { pairs, errors } = parseEqPairs(args);
+            
+            errors.forEach(err => println(err));
+            Object.keys(pairs).forEach(key => {
+                ENV[key] = pairs[key];
+            });
         }
     }
 };
@@ -104,6 +93,47 @@ const toArray = o => {
     } else {
         return [].concat(o || []);
     }
+};
+
+const parseEqPairs = (chunks) => {
+    const errors = [];
+    const pairs = {};
+
+    if (chunks.length < 2) {
+        errors.push(`Syntax error: Expected "key=value" syntax. Got ${chunks.map(a => a.toString()).join(' ')}`);
+        return { errors, pairs };
+    }
+
+    let i = chunks.length - 1;
+    while (i > 0) {
+        let key = chunks[i-2],
+            eq = chunks[i-1],
+            value = chunks[i];
+
+        // for blank values, e.g. "key="
+        if (value === '=' && eq !== '=') {
+            key = eq;
+            eq = value;
+            value = '';
+            i = i-2;
+        } else {
+            i = i-3
+        }
+
+        if (!key || (eq !== '=')) {
+            errors.push(`Syntax error: Expected "key=value" syntax. Got ${key}${eq}${value}`);
+            continue;
+        }
+
+        if (!ENV_KEY_TEST_PATTERN.test(key)) {
+            errors.push(`Error: Variable "${key}" must match pattern ${ENV_KEY_TEST_PATTERN.toString()}.`);
+            continue;
+        }
+
+        pairs[key] = value;
+    }
+
+    return { pairs, errors };
 };
 
 const println = (...args) => {
@@ -148,10 +178,14 @@ const chunkInput = s => {
         }
         
         if (ch === '"') {
+
+            // end of quoted string
             if (inQ === true) {
                 chunks.push(buf);
                 buf = '';
             }
+
+            // start of quoted string
             if (inQ === false && buf) {
                 chunks.push(buf);
                 buf = '';
@@ -160,6 +194,7 @@ const chunkInput = s => {
             continue;
         }
         
+        // encountered white space, which is a chunk delimiter but not a chunk itself
         if (inQ === false && /\s/.test(ch)) {
             if (buf) {
                 chunks.push(buf);
@@ -168,6 +203,7 @@ const chunkInput = s => {
             continue;
         }
         
+        // encountered chunk delimiter character
         if (chunkChars[ch] === true) {
             if (buf) {
                 chunks.push(buf);
@@ -187,6 +223,28 @@ const chunkInput = s => {
     return chunks;
 }
 
+const parseInput = line => {
+    // parse user input
+    let args = chunkInput(line);
+    let cmd = args.shift();
+
+    // check for alias
+    if (ALIAS.hasOwnProperty(cmd)) {
+        let alias = ALIAS[cmd];
+        let aliasArgs = chunkInput(alias);
+        
+        // the cmd is now whatever was at the front of the alias
+        cmd = aliasArgs.shift();
+        // the full args list is args from alias + args from input
+        args = aliasArgs.concat(args);
+    }
+
+    return { 
+        cmd, 
+        args: args.map(a => replaceEnvVars(a)),
+    };
+}
+
 const tick = () => {
     stdin.dataset.prompt = ENV.PROMPT;
 };
@@ -202,17 +260,9 @@ const execute = () => {
     // if there's something to do, do it
     if (line) {
         
-        // parse
-        const replaced = replaceEnvVars(line);
-        const args = chunkInput(replaced);
-        const cmd = args.shift();
-        const context = {
-            cmd: cmd,
-            args: args,
-            raw: line,
-            replaced: replaced
-        };
-    
+        const context = parseInput(line);
+        const { cmd, args } = context;
+
         // run command
         if (COMMANDS.hasOwnProperty(cmd)) {
             const info = COMMANDS[cmd];
