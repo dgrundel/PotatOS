@@ -4,7 +4,7 @@ const input = document.getElementById('input');
 
 const TAB = '  ';
 const ENV_REPLACE_PATTERN = /\$([a-zA-Z0-9_-]+)/g;
-const ENV_KEY_TEST_PATTERN = /^[A-Za-z0-9_-]+$/g;
+const ENV_KEY_TEST_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 const ENV = {
     PROMPT: '>',
@@ -64,19 +64,30 @@ const COMMANDS = {
     set: {
         description: 'Set an environment value.',
         fn: (...args) => {
-            for (let i = 0; i < args.length; i += 3) {
-                const key = args[i];
-                const eq = args[i+1];
-                const value = args[i+2];
+            let i = args.length - 1;
+            while (i > 0) {
+                let key = args[i-2],
+                    eq = args[i-1],
+                    value = args[i];
+
+                // for blank values, e.g. "key="
+                if (value === '=' && eq !== '=') {
+                    key = eq;
+                    eq = value;
+                    value = '';
+                    i = i-2;
+                } else {
+                    i = i-3
+                }
 
                 if (!key || (eq !== '=')) {
                     printerr('Syntax error: Set variables using "key=value" syntax. Got ', key, eq, value);
-                    return;
+                    continue;
                 }
 
                 if (!ENV_KEY_TEST_PATTERN.test(key)) {
                     printerr(`Error: Variable "${key}" must match pattern ${ENV_KEY_TEST_PATTERN.toString()}.`);
-                    return;
+                    continue;
                 }
 
                 ENV[key] = value;
