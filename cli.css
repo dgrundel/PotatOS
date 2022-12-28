@@ -1,5 +1,5 @@
 html {
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.25rem;
     font-family: monospace;
 }
@@ -12,6 +12,31 @@ body {
     background: var(--background-color);
     color: var(--text-color);
     text-shadow: 0 0 .2em var(--text-color);
+}
+#frame {
+    box-shadow: inset 0 0 .75rem var(--text-color);
+    border: 4rem solid #f5f2e5;
+    border-radius: 6rem;
+    position: fixed;
+    top: -2rem;
+    bottom: -2rem;
+    left: -2rem;
+    right: -2rem;
+    padding: 2rem;
+}
+#frame::before {
+    content: ' ';
+    display: block;
+    z-index: -1;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background-image: radial-gradient(
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
 }
 [data-prompt] {
     margin: 0.5em 0;
