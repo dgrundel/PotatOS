@@ -23,20 +23,26 @@ export class Chunk {
 export class Chunker {
     private readonly chunks: Chunk[] = [];
     private readonly delimiters: Record<string, boolean>;
+    private readonly limit: number;
 
     buffer: string = '';
     inEscape: boolean = false;
     inDoubleQuote: boolean = false;
     inWhitespace: boolean = false;
 
-    constructor(delimiters: string = '') {
+    constructor(delimiters: string = '', limit: number = -1) {
         this.delimiters = delimiters.split('').reduce((acc: Record<string, boolean>, item: string) => {
             acc[item] = true;
             return acc;
         }, {});
+        this.limit = limit;
     }
 
     append(s: string): Chunker {
+        if (this.limitReached()) {
+            return this;
+        }
+
         const len = s.length;
         let i: number;
 
@@ -47,7 +53,9 @@ export class Chunker {
     }
 
     flush(): Chunk[] {
+        // flush buffer, reset state
         this.flushChunk();
+        // empty chunks and return them
         return this.chunks.splice(0);
     }
 
@@ -56,6 +64,23 @@ export class Chunker {
         this.inDoubleQuote = false;
         this.inEscape = false;
         this.inWhitespace = false;
+    }
+
+    private limitReached(): boolean {
+        if (this.limit <= 0) {
+            return false;
+        }
+
+        return this.chunks.length >= this.limit;
+    }
+
+    private putChunk(chunk: Chunk) {
+        // stop if at limit
+        if (this.limit > 0 && this.chunks.length >= this.limit) {
+            return;
+        }
+
+        this.chunks.push(chunk);
     }
 
     private flushChunk(): void {
@@ -68,13 +93,17 @@ export class Chunker {
                 type = ChunkType.DOUBLE_QUOTED;
             }
 
-            this.chunks.push(new Chunk(this.buffer, type));    
+            this.putChunk(new Chunk(this.buffer, type));    
         }
 
         this.reset();
     }
 
     private appendChar(ch: string): void {
+        if (this.limitReached()) {
+            return;
+        }
+
         if (ch === '\\' && this.inEscape === false) {
             this.inEscape = true;
             return;
@@ -134,7 +163,7 @@ export class Chunker {
             // flush anything that was in the buffer
             this.flushChunk();
             // add a new chunk for this delimiter char
-            this.chunks.push(new Chunk(ch, ChunkType.DELIMITER));
+            this.putChunk(new Chunk(ch, ChunkType.DELIMITER));
             return;
         }
 

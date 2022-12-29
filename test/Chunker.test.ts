@@ -113,4 +113,15 @@ describe('Chunker', () => {
             new Chunk('chunks')
         ]);
     });
+
+    it('should respect limit if set', () => {
+        const chunker = new Chunker('', 3);
+        const chunks = chunker.append('the quick brown fox did something').flush();
+        expect(chunks.length).toBe(3);
+        expect(chunks).toMatchObject([
+            new Chunk('the'),
+            new Chunk(' ', ChunkType.WHITESPACE),
+            new Chunk('quick')
+        ]);
+    })
 });
