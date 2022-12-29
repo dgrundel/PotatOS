@@ -9,15 +9,15 @@ import { PotatoExecutor } from './commands/potato';
 import { SetExecutor } from './commands/set';
 
 const osid = '🥔 PotatOS 0.1b';
-const chunker = new Chunker();
+const commandChunker = new Chunker('', 1);
 
 const TAB = '  ';
 const ENV_REPLACE_PATTERN = /\$([a-zA-Z0-9_-]+)/g;
 const ENV_KEY_TEST_PATTERN = /^[A-Za-z0-9_-]+$/;
 
-const ENV = {
+const ENV: Record<string, string> = {
     PROMPT: '>',
-    HISTORY_MAX: 100,
+    HISTORY_MAX: '100',
     USER: 'p0tat0luv3r'
 };
 const ALIAS = {
@@ -34,7 +34,7 @@ const COMMANDS: Record<string, CommandExecutor> = {
     set: new SetExecutor()
 };
 
-const toArray = o => {
+const toArray = (o: any) => {
     if (typeof o.length === 'number') {
         return Array.prototype.slice.call(o);
     } else if (typeof o === 'boolean') {
@@ -44,8 +44,10 @@ const toArray = o => {
     }
 };
 
-const replaceEnvVars = s => {
-    return s.replace(ENV_REPLACE_PATTERN, (raw, key) => ENV.hasOwnProperty(key) ? ENV[key] : raw);
+const replaceEnvVars = (s: string) => {
+    return s.replace(ENV_REPLACE_PATTERN, (raw: string, key: string) => {
+        return (ENV.hasOwnProperty(key) ? ENV[key as keyof typeof ENV] : raw) as string;
+    });
 };
 
 export class CLI {
@@ -77,22 +79,22 @@ export class CLI {
     }
 
     getEnvironmentValue(key: string): string {
-        return ENV[key] || '';
+        return ENV[key as keyof typeof ENV] as string || '';
     }
 
     setEnvironmentValue(key: string, value: string) {
-        ENV[key] = value;
+        ENV[key as keyof typeof ENV] = value;
     }
 
-    println(...args) {
+    println(...args: any[]) {
         const el = document.createElement('div');
         el.textContent = args.map(a => a.toString ? a.toString() : a).join(' ');
         this.output.appendChild(el);
         return el;
     }
 
-    printerr(...args) {
-        const el = this.println.apply(undefined, args);
+    printerr(...args: any[]) {
+        const el = this.println.apply(this, args);
         el.classList.add('stderr');
     }
 
@@ -120,10 +122,13 @@ export class CLI {
 
     private tick() {
         (this.input.parentNode as HTMLElement).dataset.prompt = ENV.PROMPT;
+        
+        const frame = (this.output.parentNode as HTMLElement);
+        frame.scrollTop = frame.scrollHeight;
     };
     
     private execute() {
-        const line = this.input.textContent || '';
+        const line = (this.input.textContent || '').trim();
         this.input.textContent = '';
     
         // print entered line to output
@@ -132,10 +137,8 @@ export class CLI {
     
         // if there's something to do, do it
         if (line) {
-            // const context = this.parseInput(line);
-            // const { cmd, args } = context;
-            const cmd = '';
-            const args = '';
+            const cmd = commandChunker.append(line).flush()[0].content;
+            const args = line.substring(cmd.length).trim();
     
             // run command
             if (COMMANDS.hasOwnProperty(cmd)) {
@@ -152,8 +155,9 @@ export class CLI {
 
             // add history entry
             this.history.push(line);
-            if (ENV.HISTORY_MAX >= 0 && this.history.length > ENV.HISTORY_MAX) {
-                this.history = this.history.slice(this.history.length - ENV.HISTORY_MAX);
+            const historyMax = parseInt(ENV.HISTORY_MAX);
+            if (historyMax >= 0 && this.history.length > historyMax) {
+                this.history = this.history.slice(this.history.length - historyMax);
             }
         }
     };
@@ -163,11 +167,6 @@ export class CLI {
 
         this.println(osid + '\n\n');
         document.title = osid;
-    
-        /*
-            TODO:
-    
-         */
     
         this.input.addEventListener('keydown', (e: KeyboardEvent) => {
     
