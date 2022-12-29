@@ -36,13 +36,14 @@ export class Chunker {
         }, {});
     }
 
-    append(s: string): void {
+    append(s: string): Chunker {
         const len = s.length;
         let i: number;
 
         for (i = 0; i < len; i++) {
             this.appendChar(s.charAt(i));
         }
+        return this;
     }
 
     flush(): Chunk[] {
