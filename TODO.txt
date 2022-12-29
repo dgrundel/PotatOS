@@ -2,11 +2,12 @@ commands
     cat
     nano
 
+basic file system
     ls
     mv
     rm
     cp
 
-    alias
-    tab completion
-    ctrl+c to abort entry
+tab completion
+ctrl+c to abort entry
+save state to localstorage

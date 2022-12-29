@@ -37,7 +37,11 @@ export class CLI {
         },
         echo: {
             shortDescription: 'Say something.',
-            invoke: context => context.cli.println(context.args) && 0
+            invoke: context => {
+                const str = context.cli.replaceEnvironmentValues(context.args);
+                context.cli.println(str);
+                return 0;
+            }
         },
         potato: {
             shortDescription: 'Print a cute, little potato.',
