@@ -81,29 +81,26 @@ export class Chunker {
             return;
         }
 
+        // end of double-quoted string, or
+        // start of quoted string
         if (ch === '"') {
-            // end of double-quoted string
-            if (this.inDoubleQuote === true) {
-                this.flushChunk();
-            }
-
-            // start of quoted string
-            if (this.inDoubleQuote === false && this.buffer.length > 0) {
-                this.flushChunk();
-                this.inDoubleQuote = true;
-            }
-
+            // flushing resets the `inDoubleQuote` flag, so we need to save the state for after
+            const wasInDoubleQuote = this.inDoubleQuote;
+            
+            this.flushChunk();
+            this.inDoubleQuote = !wasInDoubleQuote;
             return;
         }
 
-        // char is white space
         const charIsWhitespace = /\s/.test(ch);
         if (charIsWhitespace) {
+            // if inside quoted string, just add the white space to buffer
             if (this.inDoubleQuote) {
                 this.buffer += ch;
                 return;
             }
 
+            // if we are already in the middle of a sequence of white space, just add to buffer
             if (this.inWhitespace) {
                 this.buffer += ch;
                 return;
@@ -117,7 +114,7 @@ export class Chunker {
         }
         
         // char is not whitespace, but prev char was whitespace
-        if (!charIsWhitespace && this.inWhitespace) {
+        if (!charIsWhitespace && this.inWhitespace && !this.inDoubleQuote) {
             // flush a whitespace chunk
             this.flushChunk();
         }

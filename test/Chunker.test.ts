@@ -1,4 +1,4 @@
-import { Chunk, Chunker, ChunkType } from "../src";
+import { Chunk, Chunker, ChunkType } from "../src/Chunker";
 
 describe('Chunker', () => {
     it('should chunk whitespace', () => {
@@ -52,6 +52,42 @@ describe('Chunker', () => {
             new Chunk('qux'),
             new Chunk('|', ChunkType.DELIMITER),
             new Chunk('34')
+        ]);
+    });
+
+    it('should respect double quoted strings', () => {
+        const chunker = new Chunker();
+        chunker.append('hello, my name is "Inigo Montoya".');
+
+        expect(chunker.flush()).toMatchObject([
+            new Chunk('hello,'),
+            new Chunk(' ', ChunkType.WHITESPACE),
+            new Chunk('my'),
+            new Chunk(' ', ChunkType.WHITESPACE),
+            new Chunk('name'),
+            new Chunk(' ', ChunkType.WHITESPACE),
+            new Chunk('is'),
+            new Chunk(' ', ChunkType.WHITESPACE),
+            new Chunk('Inigo Montoya', ChunkType.DOUBLE_QUOTED),
+            new Chunk('.')
+        ]);
+    });
+
+    it('should handle adjacent delimiters', () => {
+        const chunker = new Chunker('=');
+        chunker.append('k1=v1 k2="this is neat!" k3=v3');
+        expect(chunker.flush()).toMatchObject([
+            new Chunk('k1'),
+            new Chunk('=', ChunkType.DELIMITER),
+            new Chunk('v1'),
+            new Chunk(' ', ChunkType.WHITESPACE),
+            new Chunk('k2'),
+            new Chunk('=', ChunkType.DELIMITER),
+            new Chunk('this is neat!', ChunkType.DOUBLE_QUOTED),
+            new Chunk(' ', ChunkType.WHITESPACE),
+            new Chunk('k3'),
+            new Chunk('=', ChunkType.DELIMITER),
+            new Chunk('v3')
         ]);
     });
 
