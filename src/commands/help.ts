@@ -5,12 +5,13 @@ export class HelpExecutor implements CommandExecutor {
 
     invoke(context: CommandContext) {
         const commands = context.cli.getRegisteredCommands();
+        const tab = context.cli.getEnvironmentValue('TAB');
 
         context.cli.println('Available commands:');
         Object.keys(commands).sort()
             .filter(cmd => !!commands[cmd].shortDescription)
             .forEach(cmd => {
-                context.cli.println('  ' + cmd + ' - ' + commands[cmd].shortDescription);
+                context.cli.println(tab + cmd + ' - ' + commands[cmd].shortDescription);
             });
 
         return 0;

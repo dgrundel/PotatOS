@@ -7,7 +7,7 @@ export interface CommandContext {
 }
 
 export interface CommandExecutor {
-    shortDescription: string;
-
-    invoke: (context: CommandContext) => number;
+    shortDescription?: string;
+    disallowOverride?: boolean;
+    invoke(context: CommandContext): number | Error;
 }

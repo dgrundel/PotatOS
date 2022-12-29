@@ -1,9 +1,21 @@
 import { CommandContext, CommandExecutor } from "./interface";
 import { isKeyValuePair, parseKeyValuePairs } from '../keyValuePairs';
 
+class UserDefinedAlias implements CommandExecutor {
+    readonly command: string;
+
+    constructor(command: string) {
+        this.command = command;
+    }
+
+    invoke(context: CommandContext) {
+        return context.cli.invokeCommand(this.command);
+    }
+}
+
 export class AliasExecutor implements CommandExecutor {
+    readonly disallowOverride = true;
     readonly shortDescription: string = 'List and create aliases for commands.';
-    private readonly aliases: Record<string, string> = {};
 
     invoke(context: CommandContext) {
         const args = context.args.trim();
@@ -12,15 +24,24 @@ export class AliasExecutor implements CommandExecutor {
             const pairs = parseKeyValuePairs(context.args);
             pairs.forEach(item => {
                 if (isKeyValuePair(item)) {
-                    this.aliases[item.key] = item.value;
+                    try {
+                        context.cli.registerCommand(item.key, new UserDefinedAlias(item.value));
+                    } catch (e: any) {
+                        context.cli.printerr(e.message);
+                    }
+                    
                 } else {
                     context.cli.printerr(item.message);
                 }
             });
 
         } else {
-            Object.keys(this.aliases).sort().forEach(key => {
-                context.cli.println(key + '=' + this.aliases[key]);
+            const registered = context.cli.getRegisteredCommands();
+            Object.keys(registered).forEach(key => {
+                const c = registered[key];
+                if (c instanceof UserDefinedAlias) {
+                    context.cli.println(key + '=' + c.command);
+                }
             });
         }
 

@@ -4,37 +4,18 @@ import { EnvExecutor } from './commands/env';
 import { HelpExecutor } from './commands/help';
 import { HistoryExecutor } from './commands/history';
 import { CommandExecutor } from './commands/interface';
-import { PotatoExecutor } from './commands/potato';
 import { SetExecutor } from './commands/set';
 
 const osid = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
 
-const TAB = '  ';
 const ENV_REPLACE_PATTERN = /\$([a-zA-Z0-9_-]+)/g;
-const ENV_KEY_TEST_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 const ENV: Record<string, string> = {
     PROMPT: '>',
     HISTORY_MAX: '100',
-    USER: 'p0tat0luv3r'
-};
-
-
-const toArray = (o: any) => {
-    if (typeof o.length === 'number') {
-        return Array.prototype.slice.call(o);
-    } else if (typeof o === 'boolean') {
-        return [o];
-    } else {
-        return [].concat(o || []);
-    }
-};
-
-const replaceEnvVars = (s: string) => {
-    return s.replace(ENV_REPLACE_PATTERN, (raw: string, key: string) => {
-        return (ENV.hasOwnProperty(key) ? ENV[key as keyof typeof ENV] : raw) as string;
-    });
+    USER: 'spud',
+    TAB: '  '
 };
 
 export class CLI {
@@ -48,10 +29,9 @@ export class CLI {
         history: new HistoryExecutor(),
         set: new SetExecutor(),
         clear: {
-            shortDescription: 'Clear the console',
-            invoke: () => {
-                // this is a hack. should be achieveable without direct access to DOM.
-                this.output.innerHTML = '';
+            shortDescription: 'Clear the console.',
+            invoke: context => {
+                context.cli.clear();
                 return 0;
             }
         },
@@ -81,10 +61,14 @@ export class CLI {
     }
 
     registerCommand(name: string, command: CommandExecutor): void {
+        if (this.commands[name] && this.commands[name].disallowOverride) {
+            throw new Error(`${name} cannot be overridden.`);
+        }
+        
         this.commands[name] = command;
     }
 
-    getEnvironmentKeys() {
+    getEnvironmentKeys(): string[] {
         return Object.keys(ENV);
     }
 
@@ -92,14 +76,26 @@ export class CLI {
         return ENV[key as keyof typeof ENV] as string || '';
     }
 
-    setEnvironmentValue(key: string, value: string) {
+    setEnvironmentValue(key: string, value: string): void {
         ENV[key as keyof typeof ENV] = value;
     }
 
-    println(...args: any[]) {
+    replaceEnvironmentValues(s: string): string {
+        return s.replace(ENV_REPLACE_PATTERN, (raw: string, key: string) => {
+            return (ENV.hasOwnProperty(key) ? ENV[key as keyof typeof ENV] : raw) as string;
+        });
+    }
+
+    clear(): void {
+        this.output.innerHTML = '';
+    }
+
+    println(...args: any[]): HTMLElement {
         const el = document.createElement('div');
         el.textContent = args.map(a => a.toString ? a.toString() : a).join(' ');
         this.output.appendChild(el);
+        
+        // this is a hack. There should be a better way to handle this.
         return el;
     }
 
@@ -108,27 +104,23 @@ export class CLI {
         el.classList.add('stderr');
     }
 
-    // private parseInput(line) {
-    //     // parse user input
-    //     let args = chunker.append(line).flush();
-    //     let cmd: string = args.shift()?.content!;
-    
-    //     // check for alias
-    //     if (ALIAS.hasOwnProperty(cmd)) {
-    //         let alias = ALIAS[cmd];
-    //         let aliasArgs = chunker.append(alias).flush();
-            
-    //         // the cmd is now whatever was at the front of the alias
-    //         cmd = aliasArgs.shift()?.content!;
-    //         // the full args list is args from alias + args from input
-    //         args = aliasArgs.concat(args);
-    //     }
-    
-    //     return { 
-    //         cmd, 
-    //         args: args.map(a => replaceEnvVars(a)),
-    //     };
-    // }
+    invokeCommand(line: string): number | Error {
+        const cmd = commandChunker.append(line).flush()[0].content;
+
+        // run command
+        if (this.commands.hasOwnProperty(cmd)) {
+            const executor = this.commands[cmd];
+            const args = line.substring(cmd.length).trim();
+
+            return executor.invoke({
+                cli: this,
+                command: cmd,
+                args
+            });
+        }
+
+        return new Error(`Unknown command "${cmd}"`);
+    }
 
     private tick() {
         (this.input.parentNode as HTMLElement).dataset.prompt = ENV.PROMPT;
@@ -136,8 +128,8 @@ export class CLI {
         const frame = (this.output.parentNode as HTMLElement);
         frame.scrollTop = frame.scrollHeight;
     };
-    
-    private execute() {
+
+    private invokeInput() {
         const line = (this.input.textContent || '').trim();
         this.input.textContent = '';
     
@@ -147,19 +139,10 @@ export class CLI {
     
         // if there's something to do, do it
         if (line) {
-            const cmd = commandChunker.append(line).flush()[0].content;
-            const args = line.substring(cmd.length).trim();
-    
-            // run command
-            if (this.commands.hasOwnProperty(cmd)) {
-                const executor = this.commands[cmd];
-                executor.invoke({
-                    cli: this,
-                    command: cmd,
-                    args
-                });
-            } else {
-                this.printerr(`Unknown command "${cmd}"`);
+            const result = this.invokeCommand(line);
+
+            if (result instanceof Error) {
+                this.printerr(result.message);
                 this.printerr('Type "help" if you need some.');
             }
 
@@ -183,7 +166,7 @@ export class CLI {
             if (e.key === 'Enter') {
                 e.preventDefault();
     
-                this.execute();
+                this.invokeInput();
                 historyCursor = 0;
     
             } else if (e.key === 'ArrowUp') {
