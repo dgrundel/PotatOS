@@ -1,27 +1,26 @@
-import {Chunker} from './Chunker';
+import { Chunker } from './Chunker';
 import { AliasExecutor } from './commands/alias';
 import { EnvExecutor } from './commands/env';
 import { HelpExecutor } from './commands/help';
 import { HistoryExecutor } from './commands/history';
-import { CommandExecutor } from './commands/interface';
+import { CommandExecutor } from './command';
 import { SetExecutor } from './commands/set';
+import { Environment } from './Environment';
 
 const osid = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
 
-const ENV_REPLACE_PATTERN = /\$([a-zA-Z0-9_-]+)/g;
-
-const ENV: Record<string, string> = {
-    PROMPT: '$',
-    HISTORY_MAX: '100',
-    USER: 'spud',
-    TAB: '  '
-};
-
 export class CLI {
     private readonly input: HTMLInputElement;
     private readonly output: HTMLElement;
+    
     private history: string[] = [];
+    private readonly environment = new Environment({
+        PROMPT: '$',
+        HISTORY_MAX: '100',
+        USER: 'spud',
+        TAB: '  '
+    });
     private readonly commands: Record<string, CommandExecutor> = {
         alias: new AliasExecutor(),
         env: new EnvExecutor(),
@@ -30,23 +29,25 @@ export class CLI {
         set: new SetExecutor(),
         clear: {
             shortDescription: 'Clear the console.',
-            invoke: cli => {
-                cli.clear();
+            invoke: context => {
+                context.cli.clear();
                 return 0;
             }
         },
         echo: {
             shortDescription: 'Say something.',
-            invoke: (cli, context) => {
-                const str = cli.replaceEnvironmentValues(context.args);
+            invoke: (context) => {
+                const cli = context.cli;
+                const env = context.env;
+                const str = env.interpolate(context.args);
                 cli.println(str);
                 return 0;
             }
         },
         potato: {
             shortDescription: 'Print a cute, little potato.',
-            invoke: cli => {
-                cli.println('🥔');
+            invoke: context => {
+                context.cli.println('🥔');
                 return 0;
             }
         }
@@ -73,24 +74,6 @@ export class CLI {
         }
         
         this.commands[name] = command;
-    }
-
-    getEnvironmentKeys(): string[] {
-        return Object.keys(ENV);
-    }
-
-    getEnvironmentValue(key: string): string {
-        return ENV[key as keyof typeof ENV] as string || '';
-    }
-
-    setEnvironmentValue(key: string, value: string): void {
-        ENV[key as keyof typeof ENV] = value;
-    }
-
-    replaceEnvironmentValues(s: string): string {
-        return s.replace(ENV_REPLACE_PATTERN, (raw: string, key: string) => {
-            return (ENV.hasOwnProperty(key) ? ENV[key as keyof typeof ENV] : raw) as string;
-        });
     }
 
     clear(): void {
@@ -120,9 +103,11 @@ export class CLI {
             const args = line.substring(cmd.length).trim();
 
             try {
-                return executor.invoke(this, {
+                return executor.invoke({
                     command: cmd,
-                    args
+                    args,
+                    cli: this,
+                    env: this.environment
                 });
             } catch (e) {
                 return e as Error;
@@ -134,7 +119,7 @@ export class CLI {
     }
 
     private tick() {
-        (this.input.parentNode as HTMLElement).dataset.prompt = ENV.PROMPT;
+        (this.input.parentNode as HTMLElement).dataset.prompt = this.environment.getString('PROMPT');
         
         const frame = (this.output.parentNode as HTMLElement);
         frame.scrollTop = frame.scrollHeight;
@@ -146,7 +131,7 @@ export class CLI {
     
         // print entered line to output
         const el = this.println(line);
-        el.dataset.prompt = ENV.PROMPT;
+        el.dataset.prompt = this.environment.getString('PROMPT');
     
         // if there's something to do, do it
         if (line) {
@@ -158,7 +143,7 @@ export class CLI {
 
             // add history entry
             this.history.push(line);
-            const historyMax = parseInt(ENV.HISTORY_MAX);
+            const historyMax = this.environment.getNumber('HISTORY_MAX');
             if (historyMax >= 0 && this.history.length > historyMax) {
                 this.history = this.history.slice(this.history.length - historyMax);
             }

@@ -1,6 +1,5 @@
-import { CommandContext, CommandExecutor } from "./interface";
+import { CommandContext, CommandExecutor } from "../command";
 import { isKeyValuePair, parseKeyValuePairs } from '../keyValuePairs';
-import { CLI } from "../CLI";
 
 class UserDefinedAlias implements CommandExecutor {
     readonly command: string;
@@ -9,7 +8,8 @@ class UserDefinedAlias implements CommandExecutor {
         this.command = command;
     }
 
-    invoke(cli: CLI) {
+    invoke(context: CommandContext) {
+        const cli = context.cli;
         return cli.invokeCommand(this.command);
     }
 }
@@ -18,7 +18,8 @@ export class AliasExecutor implements CommandExecutor {
     readonly disallowOverride = true;
     readonly shortDescription: string = 'List and create aliases for commands.';
 
-    invoke(cli: CLI, context: CommandContext) {
+    invoke(context: CommandContext) {
+        const cli = context.cli;
         const args = context.args.trim();
         
         if (args.length > 0) {
