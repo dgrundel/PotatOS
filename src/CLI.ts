@@ -1,6 +1,5 @@
 import {Chunker} from './Chunker';
 import { AliasExecutor } from './commands/alias';
-import { EchoExecutor } from './commands/echo';
 import { EnvExecutor } from './commands/env';
 import { HelpExecutor } from './commands/help';
 import { HistoryExecutor } from './commands/history';
@@ -20,19 +19,7 @@ const ENV: Record<string, string> = {
     HISTORY_MAX: '100',
     USER: 'p0tat0luv3r'
 };
-const ALIAS = {
-    printenv: 'env'
-};
 
-const COMMANDS: Record<string, CommandExecutor> = {
-    alias: new AliasExecutor(),
-    echo: new EchoExecutor(),
-    env: new EnvExecutor(),
-    help: new HelpExecutor(),
-    history: new HistoryExecutor(),
-    potato: new PotatoExecutor(),
-    set: new SetExecutor()
-};
 
 const toArray = (o: any) => {
     if (typeof o.length === 'number') {
@@ -51,9 +38,32 @@ const replaceEnvVars = (s: string) => {
 };
 
 export class CLI {
-    readonly input: HTMLInputElement;
-    readonly output: HTMLElement;
+    private readonly input: HTMLInputElement;
+    private readonly output: HTMLElement;
     private history: string[] = [];
+    private readonly commands: Record<string, CommandExecutor> = {
+        alias: new AliasExecutor(),
+        env: new EnvExecutor(),
+        help: new HelpExecutor(),
+        history: new HistoryExecutor(),
+        set: new SetExecutor(),
+        clear: {
+            shortDescription: 'Clear the console',
+            invoke: () => {
+                // this is a hack. should be achieveable without direct access to DOM.
+                this.output.innerHTML = '';
+                return 0;
+            }
+        },
+        echo: {
+            shortDescription: 'Say something.',
+            invoke: context => context.cli.println(context.args) && 0
+        },
+        potato: {
+            shortDescription: 'Print a cute, little potato.',
+            invoke: context => context.cli.println('🥔') && 0
+        }
+    };
 
     constructor(input: HTMLInputElement, output: HTMLElement) {
         this.input = input;
@@ -67,11 +77,11 @@ export class CLI {
     }
 
     getRegisteredCommands(): Record<string, CommandExecutor> {
-        return COMMANDS;
+        return this.commands;
     }
 
     registerCommand(name: string, command: CommandExecutor): void {
-        COMMANDS[name] = command;
+        this.commands[name] = command;
     }
 
     getEnvironmentKeys() {
@@ -141,8 +151,8 @@ export class CLI {
             const args = line.substring(cmd.length).trim();
     
             // run command
-            if (COMMANDS.hasOwnProperty(cmd)) {
-                const executor = COMMANDS[cmd];
+            if (this.commands.hasOwnProperty(cmd)) {
+                const executor = this.commands[cmd];
                 executor.invoke({
                     cli: this,
                     command: cmd,
