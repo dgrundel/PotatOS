@@ -14,14 +14,16 @@ body {
     text-shadow: 0 0 .2em var(--text-color);
 }
 #frame {
+    --frame-offset: -3rem;
+
     box-shadow: inset 0 0 .75rem var(--text-color);
     border: 4rem solid #f5f2e5;
     border-radius: 6rem;
     position: fixed;
-    top: -2rem;
-    bottom: -2rem;
-    left: -2rem;
-    right: -2rem;
+    top: var(--frame-offset);
+    right: var(--frame-offset);
+    bottom: var(--frame-offset);
+    left: var(--frame-offset);
     padding: 2rem;
     overflow-y: auto;
 }
@@ -51,6 +53,8 @@ body {
 }
 #input {
     outline: none;
+    /* caret-color: transparent; */
+    caret-shape: block;
 }
 .stderr {
     color: #ff5f5f;

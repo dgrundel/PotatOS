@@ -12,7 +12,7 @@ const commandChunker = new Chunker('', 1);
 const ENV_REPLACE_PATTERN = /\$([a-zA-Z0-9_-]+)/g;
 
 const ENV: Record<string, string> = {
-    PROMPT: '>',
+    PROMPT: '$',
     HISTORY_MAX: '100',
     USER: 'spud',
     TAB: '  '
