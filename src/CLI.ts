@@ -119,13 +119,18 @@ export class CLI {
             const executor = this.commands[cmd];
             const args = line.substring(cmd.length).trim();
 
-            return executor.invoke(this, {
-                command: cmd,
-                args
-            });
+            try {
+                return executor.invoke(this, {
+                    command: cmd,
+                    args
+                });
+            } catch (e) {
+                return e as Error;
+            }
+            
         }
 
-        return new Error(`Unknown command "${cmd}"`);
+        return new Error(`Unknown command "${cmd}"\nType "help" if you need some.`);
     }
 
     private tick() {
@@ -149,7 +154,6 @@ export class CLI {
 
             if (result instanceof Error) {
                 this.printerr(result.message);
-                this.printerr('Type "help" if you need some.');
             }
 
             // add history entry

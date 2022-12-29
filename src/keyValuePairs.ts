@@ -25,9 +25,9 @@ export const parseKeyValuePairs = (s: string): (KeyValuePair | Error)[] => {
 
     let i = chunks.length - 1;
     while (i > 0) {
-        let key = chunks[i-2].content,
-            eq = chunks[i-1].content,
-            value = chunks[i].content;
+        let key = chunks[i-2] && chunks[i-2].content,
+            eq = chunks[i-1] && chunks[i-1].content,
+            value = chunks[i] && chunks[i].content;
 
         // for blank values, e.g. "key="
         if (value === '=' && eq !== '=') {
