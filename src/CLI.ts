@@ -6,56 +6,60 @@ import { HistoryExecutor } from './commands/history';
 import { CommandExecutor } from './command';
 import { SetExecutor } from './commands/set';
 import { Environment } from './Environment';
+import { CWD_ENV_VAR } from './FileSystem';
 
 const osid = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
+export const PROMPT_ENV_VAR = 'PROMPT';
 
 export class CLI {
     private readonly input: HTMLInputElement;
     private readonly output: HTMLElement;
-    
+    private readonly environment;    
+    private readonly commands: Record<string, CommandExecutor>;
     private history: string[] = [];
-    private readonly environment = new Environment({
-        PROMPT: '$',
-        HISTORY_MAX: '100',
-        USER: 'spud',
-        TAB: '  '
-    });
-    private readonly commands: Record<string, CommandExecutor> = {
-        alias: new AliasExecutor(),
-        env: new EnvExecutor(),
-        help: new HelpExecutor(),
-        history: new HistoryExecutor(),
-        set: new SetExecutor(),
-        clear: {
-            shortDescription: 'Clear the console.',
-            invoke: context => {
-                context.cli.clear();
-                return 0;
-            }
-        },
-        echo: {
-            shortDescription: 'Say something.',
-            invoke: (context) => {
-                const cli = context.cli;
-                const env = context.env;
-                const str = env.interpolate(context.args);
-                cli.println(str);
-                return 0;
-            }
-        },
-        potato: {
-            shortDescription: 'Print a cute, little potato.',
-            invoke: context => {
-                context.cli.println('🥔');
-                return 0;
-            }
-        }
-    };
 
     constructor(input: HTMLInputElement, output: HTMLElement) {
         this.input = input;
         this.output = output;
+        this.environment = new Environment({
+            [PROMPT_ENV_VAR]: '$',
+            [CWD_ENV_VAR]: '/',
+            HISTORY_MAX: '100',
+            USER: 'spud',
+            TAB: '  '
+        });
+        this.commands = {
+            alias: new AliasExecutor(),
+            env: new EnvExecutor(),
+            help: new HelpExecutor(),
+            history: new HistoryExecutor(),
+            set: new SetExecutor(),
+            clear: {
+                shortDescription: 'Clear the console.',
+                invoke: context => {
+                    context.cli.clear();
+                    return 0;
+                }
+            },
+            echo: {
+                shortDescription: 'Say something.',
+                invoke: (context) => {
+                    const cli = context.cli;
+                    const env = context.env;
+                    const str = env.interpolate(context.args);
+                    cli.println(str);
+                    return 0;
+                }
+            },
+            potato: {
+                shortDescription: 'Print a cute, little potato.',
+                invoke: context => {
+                    context.cli.println('🥔');
+                    return 0;
+                }
+            }
+        };
 
         this.init();
     }
@@ -119,7 +123,7 @@ export class CLI {
     }
 
     private tick() {
-        (this.input.parentNode as HTMLElement).dataset.prompt = this.environment.getString('PROMPT');
+        (this.input.parentNode as HTMLElement).dataset.prompt = this.environment.getString(PROMPT_ENV_VAR);
         
         const frame = (this.output.parentNode as HTMLElement);
         frame.scrollTop = frame.scrollHeight;
@@ -131,7 +135,7 @@ export class CLI {
     
         // print entered line to output
         const el = this.println(line);
-        el.dataset.prompt = this.environment.getString('PROMPT');
+        el.dataset.prompt = this.environment.getString(PROMPT_ENV_VAR);
     
         // if there's something to do, do it
         if (line) {
