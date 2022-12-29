@@ -1,17 +1,18 @@
-import { CommandContext, CommandExecutor } from "./interface";
+import { CLI } from "../CLI";
+import { CommandExecutor } from "./interface";
 
 export class HelpExecutor implements CommandExecutor {
     readonly shortDescription: string = 'Prints this message.';
 
-    invoke(context: CommandContext) {
-        const commands = context.cli.getRegisteredCommands();
-        const tab = context.cli.getEnvironmentValue('TAB');
+    invoke(cli: CLI) {
+        const commands = cli.getRegisteredCommands();
+        const tab = cli.getEnvironmentValue('TAB');
 
-        context.cli.println('Available commands:');
+        cli.println('Available commands:');
         Object.keys(commands).sort()
             .filter(cmd => !!commands[cmd].shortDescription)
             .forEach(cmd => {
-                context.cli.println(tab + cmd + ' - ' + commands[cmd].shortDescription);
+                cli.println(tab + cmd + ' - ' + commands[cmd].shortDescription);
             });
 
         return 0;

@@ -30,22 +30,25 @@ export class CLI {
         set: new SetExecutor(),
         clear: {
             shortDescription: 'Clear the console.',
-            invoke: context => {
-                context.cli.clear();
+            invoke: cli => {
+                cli.clear();
                 return 0;
             }
         },
         echo: {
             shortDescription: 'Say something.',
-            invoke: context => {
-                const str = context.cli.replaceEnvironmentValues(context.args);
-                context.cli.println(str);
+            invoke: (cli, context) => {
+                const str = cli.replaceEnvironmentValues(context.args);
+                cli.println(str);
                 return 0;
             }
         },
         potato: {
             shortDescription: 'Print a cute, little potato.',
-            invoke: context => context.cli.println('🥔') && 0
+            invoke: cli => {
+                cli.println('🥔');
+                return 0;
+            }
         }
     };
 
@@ -116,8 +119,7 @@ export class CLI {
             const executor = this.commands[cmd];
             const args = line.substring(cmd.length).trim();
 
-            return executor.invoke({
-                cli: this,
+            return executor.invoke(this, {
                 command: cmd,
                 args
             });

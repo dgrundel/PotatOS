@@ -1,11 +1,12 @@
-import { CommandContext, CommandExecutor } from "./interface";
+import { CLI } from "../CLI";
+import { CommandExecutor } from "./interface";
 
 export class EnvExecutor implements CommandExecutor {
     readonly shortDescription: string = 'Display environment values.';
 
-    invoke(context: CommandContext) {
-        context.cli.getEnvironmentKeys().sort().forEach(key => {
-            context.cli.println(key + '=' + context.cli.getEnvironmentValue(key));
+    invoke(cli: CLI) {
+        cli.getEnvironmentKeys().sort().forEach(key => {
+            cli.println(key + '=' + cli.getEnvironmentValue(key));
         });
         return 0;
     }
