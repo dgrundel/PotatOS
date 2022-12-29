@@ -27,4 +27,18 @@ describe('parseKeyValuePairs', () => {
             { key: 'k3', value: 'v3' }
         ]);
     });
+
+    it('should return error when not enough chunks available', () => {
+        const pairs = parseKeyValuePairs('k1');
+        expect(pairs).toMatchObject([
+            new Error('Syntax error: Expected "key=value" syntax. Got k1')
+        ]);
+    });
+
+    it('should return error when bad syntax encountered', () => {
+        const pairs = parseKeyValuePairs('k1 v1 k2 v2');
+        expect(pairs).toMatchObject([
+            new Error('Syntax error: Expected "key=value" syntax. Got v1k2v2')
+        ]);
+    });
 });

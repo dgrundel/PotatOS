@@ -96,47 +96,6 @@ const toArray = o => {
     }
 };
 
-const parseEqPairs = (chunks) => {
-    const errors = [];
-    const pairs = {};
-
-    if (chunks.length < 2) {
-        errors.push(`Syntax error: Expected "key=value" syntax. Got ${chunks.map(a => a.toString()).join(' ')}`);
-        return { errors, pairs };
-    }
-
-    let i = chunks.length - 1;
-    while (i > 0) {
-        let key = chunks[i-2],
-            eq = chunks[i-1],
-            value = chunks[i];
-
-        // for blank values, e.g. "key="
-        if (value === '=' && eq !== '=') {
-            key = eq;
-            eq = value;
-            value = '';
-            i = i-2;
-        } else {
-            i = i-3
-        }
-
-        if (!key || (eq !== '=')) {
-            errors.push(`Syntax error: Expected "key=value" syntax. Got ${key}${eq}${value}`);
-            continue;
-        }
-
-        if (!ENV_KEY_TEST_PATTERN.test(key)) {
-            errors.push(`Error: Variable "${key}" must match pattern ${ENV_KEY_TEST_PATTERN.toString()}.`);
-            continue;
-        }
-
-        pairs[key] = value;
-    }
-
-    return { pairs, errors };
-};
-
 const println = (...args) => {
     const el = document.createElement('div');
     el.textContent = args.map(a => a.toString ? a.toString() : a).join(' ');
@@ -152,77 +111,6 @@ const printerr = (...args) => {
 const replaceEnvVars = s => {
     return s.replace(ENV_REPLACE_PATTERN, (raw, key) => ENV.hasOwnProperty(key) ? ENV[key] : raw);
 };
-
-const chunkInput = s => {
-    const len = s.length;
-    const chunks = [];
-    let buf = '';
-    let inQ = false;
-    let inEsc = false;
-    var i, ch;
-    const chunkChars = {
-        '=': true
-    };
-
-    for(i = 0; i < len; i++) {
-        ch = s.charAt(i);
-
-        if (ch === '\\' && inEsc === false) {
-            inEsc = true;
-            continue;
-        }
-        
-        if (inEsc === true) {
-            buf += ch;
-            inEsc = false;
-            continue;
-        }
-        
-        if (ch === '"') {
-
-            // end of quoted string
-            if (inQ === true) {
-                chunks.push(buf);
-                buf = '';
-            }
-
-            // start of quoted string
-            if (inQ === false && buf) {
-                chunks.push(buf);
-                buf = '';
-            }
-            inQ = !inQ;
-            continue;
-        }
-        
-        // encountered white space, which is a chunk delimiter but not a chunk itself
-        if (inQ === false && /\s/.test(ch)) {
-            if (buf) {
-                chunks.push(buf);
-                buf = '';
-            }
-            continue;
-        }
-        
-        // encountered chunk delimiter character
-        if (chunkChars[ch] === true) {
-            if (buf) {
-                chunks.push(buf);
-                buf = '';
-            }
-            chunks.push(ch);
-            continue;
-        }
-        
-        buf += ch;
-    }
-
-    if (buf) {
-        chunks.push(buf);
-    }
-    
-    return chunks;
-}
 
 const parseInput = line => {
     // parse user input

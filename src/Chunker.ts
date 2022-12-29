@@ -14,6 +14,10 @@ export class Chunk {
         this.content = content;
         this.type = type;
     }
+
+    toString(): string {
+        return this.content;
+    }
 }
 
 export class Chunker {

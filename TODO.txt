@@ -1,8 +1,12 @@
 commands
     cat
     nano
-    
+
     ls
     mv
     rm
     cp
+
+    alias
+    tab completion
+    ctrl+c to abort entry
