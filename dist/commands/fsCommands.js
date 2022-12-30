@@ -4,17 +4,21 @@ export const FS_COMMANDS = {
         shortDescription: 'Show contents of a text file',
         invoke: async (context) => {
             const { args, fs, cli } = context;
-            const node = fs.get(args.trim());
-            if (PotatoFS.isFile(node)) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    cli.println(e.target.result);
-                };
-                reader.readAsText(node.blob);
-                return 0;
-            }
-            cli.printerr(`${node.name} is not a file.`);
-            return 1;
+            return new Promise(resolve => {
+                const node = fs.get(args.trim());
+                if (PotatoFS.isFile(node)) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        cli.println(e.target.result);
+                        resolve(0);
+                    };
+                    reader.readAsText(node.blob);
+                }
+                else {
+                    cli.printerr(`${node.name} is not a file.`);
+                    resolve(1);
+                }
+            });
         }
     },
     download: {
@@ -23,6 +27,7 @@ export const FS_COMMANDS = {
             const { args, fs, cli } = context;
             const node = fs.get(args.trim());
             if (PotatoFS.isFile(node)) {
+                cli.println('Preparing your download, just a sec.');
                 const reader = new FileReader();
                 reader.onload = e => {
                     const a = document.createElement('a');

@@ -6,8 +6,8 @@ basic file system
     mv
     rm
     cp
-    upload
-    download
+
+upload command will overwrite files without prompting
 
 "apps" in iframe
     access to core libraries via message passing

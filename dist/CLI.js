@@ -113,6 +113,7 @@ export class CLI {
         this.input.parentNode.dataset.prompt = this.environment.getString(PROMPT_ENV_VAR);
         const frame = this.output.parentNode;
         frame.scrollTop = frame.scrollHeight;
+        this.input.focus();
     }
     ;
     async invokeInput() {
@@ -141,30 +142,37 @@ export class CLI {
         this.println(osid + '\n\n');
         document.title = osid;
         this.input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                // TODO await this
-                this.invokeInput();
-                historyCursor = 0;
-            }
-            else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                historyCursor = (historyCursor === 0 ? this.history.length : historyCursor) - 1;
-                this.input.textContent = this.history[historyCursor];
-                this.input.focus();
-            }
-            else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                historyCursor = historyCursor === this.history.length - 1 ? 0 : (historyCursor + 1);
-                this.input.textContent = this.history[historyCursor];
-                this.input.focus();
-            }
-            this.tick();
+            new Promise(resolve => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // TODO await this
+                    const inputContainer = this.input.parentNode;
+                    inputContainer.style.visibility = 'hidden';
+                    this.invokeInput().then(() => {
+                        inputContainer.style.visibility = 'visible';
+                        resolve();
+                    });
+                    historyCursor = 0;
+                }
+                else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    historyCursor = (historyCursor === 0 ? this.history.length : historyCursor) - 1;
+                    this.input.textContent = this.history[historyCursor];
+                    resolve();
+                }
+                else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    historyCursor = historyCursor === this.history.length - 1 ? 0 : (historyCursor + 1);
+                    this.input.textContent = this.history[historyCursor];
+                    resolve();
+                }
+            }).then(() => {
+                this.tick();
+            });
         });
         document.documentElement.addEventListener('click', e => {
             this.input.focus();
         });
-        this.input.focus();
         this.tick();
     }
 }
