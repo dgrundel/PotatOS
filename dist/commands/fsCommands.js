@@ -2,7 +2,7 @@ import { PotatoFS } from '../PotatoFS';
 export const FS_COMMANDS = {
     cat: {
         shortDescription: 'Show contents of a text file',
-        invoke: context => {
+        invoke: async (context) => {
             const { args, fs, cli } = context;
             const node = fs.get(args.trim());
             if (PotatoFS.isFile(node)) {
@@ -19,7 +19,7 @@ export const FS_COMMANDS = {
     },
     download: {
         shortDescription: 'Download a file to your computer',
-        invoke: context => {
+        invoke: async (context) => {
             const { args, fs, cli } = context;
             const node = fs.get(args.trim());
             if (PotatoFS.isFile(node)) {
@@ -39,7 +39,7 @@ export const FS_COMMANDS = {
     },
     cd: {
         shortDescription: 'Change current working directory',
-        invoke: context => {
+        invoke: async (context) => {
             const { args, fs } = context;
             fs.cd(args.trim());
             return 0;
@@ -47,7 +47,7 @@ export const FS_COMMANDS = {
     },
     pwd: {
         shortDescription: 'Print current working directory',
-        invoke: context => {
+        invoke: async (context) => {
             const { cli, fs } = context;
             cli.println(fs.cwd());
             return 0;
@@ -55,7 +55,7 @@ export const FS_COMMANDS = {
     },
     ls: {
         shortDescription: 'List files and folders',
-        invoke: context => {
+        invoke: async (context) => {
             const { cli, args, fs, env } = context;
             const nodes = fs.list(args.trim());
             const tab = env.getString('TAB');
@@ -68,7 +68,7 @@ export const FS_COMMANDS = {
     },
     mkdirp: {
         shortDescription: 'Create directories',
-        invoke: context => {
+        invoke: async (context) => {
             const { args, fs } = context;
             fs.mkdirp(args.trim());
             return 0;
@@ -76,7 +76,7 @@ export const FS_COMMANDS = {
     },
     upload: {
         shortDescription: 'Upload a file to the current directory',
-        invoke: context => {
+        invoke: async (context) => {
             const { fs, cli } = context;
             const input = document.createElement('input');
             input.type = 'file';

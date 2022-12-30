@@ -13,6 +13,8 @@
         ChunkType[ChunkType["OTHER"] = 4] = "OTHER";
     })(ChunkType || (ChunkType = {}));
     class Chunk {
+        content;
+        type;
         constructor(content, type = ChunkType.OTHER) {
             this.content = content;
             this.type = type;
@@ -22,12 +24,14 @@
         }
     }
     class Chunker {
+        chunks = [];
+        delimiters;
+        limit;
+        buffer = '';
+        inEscape = false;
+        inDoubleQuote = false;
+        inWhitespace = false;
         constructor(delimiters = '', limit = -1) {
-            this.chunks = [];
-            this.buffer = '';
-            this.inEscape = false;
-            this.inDoubleQuote = false;
-            this.inWhitespace = false;
             this.delimiters = delimiters.split('').reduce((acc, item) => {
                 acc[item] = true;
                 return acc;
@@ -181,20 +185,19 @@
     };
 
     class UserDefinedAlias {
+        command;
         constructor(command) {
             this.command = command;
         }
-        invoke(context) {
+        async invoke(context) {
             const cli = context.cli;
             return cli.invokeCommand(this.command);
         }
     }
     class AliasExecutor {
-        constructor() {
-            this.disallowOverride = true;
-            this.shortDescription = 'List and create aliases for commands';
-        }
-        invoke(context) {
+        disallowOverride = true;
+        shortDescription = 'List and create aliases for commands';
+        async invoke(context) {
             const cli = context.cli;
             const args = context.args.trim();
             if (args.length > 0) {
@@ -235,10 +238,8 @@
     }
 
     class EnvExecutor {
-        constructor() {
-            this.shortDescription = 'Display environment values';
-        }
-        invoke(context) {
+        shortDescription = 'Display environment values';
+        async invoke(context) {
             const { cli, env } = context;
             env.keys().sort().forEach(key => {
                 cli.println(key + '=' + env.getString(key));
@@ -248,10 +249,8 @@
     }
 
     class HelpExecutor {
-        constructor() {
-            this.shortDescription = 'Prints this message';
-        }
-        invoke(context) {
+        shortDescription = 'Prints this message';
+        async invoke(context) {
             const { cli, env } = context;
             const commands = cli.getRegisteredCommands();
             const tab = env.getString('TAB');
@@ -266,10 +265,8 @@
     }
 
     class HistoryExecutor {
-        constructor() {
-            this.shortDescription = 'List previously used commands';
-        }
-        invoke(context) {
+        shortDescription = 'List previously used commands';
+        async invoke(context) {
             const cli = context.cli;
             cli.getHistory().forEach((line, i) => cli.println(i, line));
             return 0;
@@ -278,10 +275,8 @@
 
     const ENV_KEY_TEST_PATTERN = /^[A-Za-z0-9_-]+$/;
     class SetExecutor {
-        constructor() {
-            this.shortDescription = 'Set an environment value';
-        }
-        invoke(context) {
+        shortDescription = 'Set an environment value';
+        async invoke(context) {
             const { cli, env } = context;
             const pairs = parseKeyValuePairs(context.args);
             pairs.forEach(pair => {
@@ -303,6 +298,7 @@
 
     const ENV_REPLACE_PATTERN = /\$([a-zA-Z0-9_-]+)/g;
     class Environment {
+        env;
         constructor(initial = {}) {
             this.env = initial;
         }
@@ -344,6 +340,8 @@
     const CWD_ENV_VAR = 'CWD';
     const SEPARATOR = '/';
     class PotatoFS {
+        root;
+        environment;
         constructor(root, environment) {
             this.root = root;
             this.environment = environment;
@@ -472,7 +470,7 @@
     const FS_COMMANDS = {
         cat: {
             shortDescription: 'Show contents of a text file',
-            invoke: context => {
+            invoke: async (context) => {
                 const { args, fs, cli } = context;
                 const node = fs.get(args.trim());
                 if (PotatoFS.isFile(node)) {
@@ -489,7 +487,7 @@
         },
         download: {
             shortDescription: 'Download a file to your computer',
-            invoke: context => {
+            invoke: async (context) => {
                 const { args, fs, cli } = context;
                 const node = fs.get(args.trim());
                 if (PotatoFS.isFile(node)) {
@@ -509,7 +507,7 @@
         },
         cd: {
             shortDescription: 'Change current working directory',
-            invoke: context => {
+            invoke: async (context) => {
                 const { args, fs } = context;
                 fs.cd(args.trim());
                 return 0;
@@ -517,7 +515,7 @@
         },
         pwd: {
             shortDescription: 'Print current working directory',
-            invoke: context => {
+            invoke: async (context) => {
                 const { cli, fs } = context;
                 cli.println(fs.cwd());
                 return 0;
@@ -525,7 +523,7 @@
         },
         ls: {
             shortDescription: 'List files and folders',
-            invoke: context => {
+            invoke: async (context) => {
                 const { cli, args, fs, env } = context;
                 const nodes = fs.list(args.trim());
                 const tab = env.getString('TAB');
@@ -538,7 +536,7 @@
         },
         mkdirp: {
             shortDescription: 'Create directories',
-            invoke: context => {
+            invoke: async (context) => {
                 const { args, fs } = context;
                 fs.mkdirp(args.trim());
                 return 0;
@@ -546,7 +544,7 @@
         },
         upload: {
             shortDescription: 'Upload a file to the current directory',
-            invoke: context => {
+            invoke: async (context) => {
                 const { fs, cli } = context;
                 const input = document.createElement('input');
                 input.type = 'file';
@@ -575,8 +573,13 @@
     const commandChunker = new Chunker('', 1);
     const PROMPT_ENV_VAR = 'PROMPT';
     class CLI {
+        input;
+        output;
+        environment;
+        commands;
+        fs;
+        history = [];
         constructor(input, output) {
-            this.history = [];
             this.input = input;
             this.output = output;
             this.environment = new Environment({
@@ -586,28 +589,38 @@
                 USER: 'spud',
                 TAB: '  '
             });
-            this.commands = Object.assign({ alias: new AliasExecutor(), env: new EnvExecutor(), help: new HelpExecutor(), history: new HistoryExecutor(), set: new SetExecutor(), clear: {
+            this.commands = {
+                alias: new AliasExecutor(),
+                env: new EnvExecutor(),
+                help: new HelpExecutor(),
+                history: new HistoryExecutor(),
+                set: new SetExecutor(),
+                clear: {
                     shortDescription: 'Clear the console',
-                    invoke: context => {
+                    invoke: async (context) => {
                         context.cli.clear();
                         return 0;
                     }
-                }, echo: {
+                },
+                echo: {
                     shortDescription: 'Say something',
-                    invoke: (context) => {
+                    invoke: async (context) => {
                         const cli = context.cli;
                         const env = context.env;
                         const str = env.interpolate(context.args);
                         cli.println(str);
                         return 0;
                     }
-                }, potato: {
+                },
+                potato: {
                     shortDescription: 'Print a cute, little potato',
-                    invoke: context => {
+                    invoke: async (context) => {
                         context.cli.println('🥔');
                         return 0;
                     }
-                } }, FS_COMMANDS);
+                },
+                ...FS_COMMANDS
+            };
             this.fs = new PotatoFS({ name: '', children: [] }, this.environment);
             this.init();
         }
@@ -637,7 +650,7 @@
             const el = this.println.apply(this, args);
             el.classList.add('stderr');
         }
-        invokeCommand(line) {
+        async invokeCommand(line) {
             const cmd = commandChunker.append(line).flush()[0].content;
             // run command
             if (this.commands.hasOwnProperty(cmd)) {
@@ -664,7 +677,7 @@
             frame.scrollTop = frame.scrollHeight;
         }
         ;
-        invokeInput() {
+        async invokeInput() {
             const line = (this.input.textContent || '').trim();
             this.input.textContent = '';
             // print entered line to output
@@ -672,7 +685,7 @@
             el.dataset.prompt = this.environment.getString(PROMPT_ENV_VAR);
             // if there's something to do, do it
             if (line) {
-                const result = this.invokeCommand(line);
+                const result = await this.invokeCommand(line);
                 if (result instanceof Error) {
                     this.printerr(result.message);
                 }
@@ -692,6 +705,7 @@
             this.input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
+                    // TODO await this
                     this.invokeInput();
                     historyCursor = 0;
                 }

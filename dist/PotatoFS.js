@@ -1,6 +1,8 @@
 export const CWD_ENV_VAR = 'CWD';
 const SEPARATOR = '/';
 export class PotatoFS {
+    root;
+    environment;
     constructor(root, environment) {
         this.root = root;
         this.environment = environment;

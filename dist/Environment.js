@@ -1,5 +1,6 @@
 const ENV_REPLACE_PATTERN = /\$([a-zA-Z0-9_-]+)/g;
 export class Environment {
+    env;
     constructor(initial = {}) {
         this.env = initial;
     }

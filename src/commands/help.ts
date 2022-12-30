@@ -3,7 +3,7 @@ import { CommandContext, CommandExecutor } from "../command";
 export class HelpExecutor implements CommandExecutor {
     readonly shortDescription: string = 'Prints this message';
 
-    invoke(context: CommandContext) {
+    async invoke(context: CommandContext) {
         const { cli, env } = context;
         const commands = cli.getRegisteredCommands();
         const tab = env.getString('TAB');

@@ -13,5 +13,5 @@ export interface CommandContext {
 export interface CommandExecutor {
     shortDescription?: string;
     disallowOverride?: boolean;
-    invoke(context: CommandContext): number | Error;
+    invoke(context: CommandContext): Promise<number | Error>;
 }

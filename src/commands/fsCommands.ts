@@ -4,7 +4,7 @@ import { PotatoFS, PotatoFSDir, PotatoFSFile } from '../PotatoFS';
 export const FS_COMMANDS: Record<string, CommandExecutor> = {
     cat: {
         shortDescription: 'Show contents of a text file',
-        invoke: context => {
+        invoke: async context => {
             const { args, fs, cli } = context;
             const node = fs.get(args.trim());
 
@@ -24,7 +24,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
     },
     download: {
         shortDescription: 'Download a file to your computer',
-        invoke: context => {
+        invoke: async context => {
             const { args, fs, cli } = context;
             const node = fs.get(args.trim());
 
@@ -47,7 +47,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
     },
     cd: {
         shortDescription: 'Change current working directory',
-        invoke: context => {
+        invoke: async context => {
             const { args, fs } = context;
             fs.cd(args.trim());
             return 0;
@@ -55,7 +55,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
     },
     pwd: {
         shortDescription: 'Print current working directory',
-        invoke: context => {
+        invoke: async context => {
             const { cli, fs } = context;
             cli.println(fs.cwd());
             return 0;
@@ -63,7 +63,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
     },
     ls: {
         shortDescription: 'List files and folders',
-        invoke: context => {
+        invoke: async context => {
             const { cli, args, fs, env } = context;
             const nodes = fs.list(args.trim());
             const tab = env.getString('TAB');
@@ -78,7 +78,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
     },
     mkdirp: {
         shortDescription: 'Create directories',
-        invoke: context => {
+        invoke: async context => {
             const { args, fs } = context;
             fs.mkdirp(args.trim());
             return 0;
@@ -86,7 +86,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
     },
     upload: {
         shortDescription: 'Upload a file to the current directory',
-        invoke: context => {
+        invoke: async context => {
             const { fs, cli } = context;
 
             const input: HTMLInputElement = document.createElement('input');

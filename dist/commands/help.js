@@ -1,8 +1,6 @@
 export class HelpExecutor {
-    constructor() {
-        this.shortDescription = 'Prints this message';
-    }
-    invoke(context) {
+    shortDescription = 'Prints this message';
+    async invoke(context) {
         const { cli, env } = context;
         const commands = cli.getRegisteredCommands();
         const tab = env.getString('TAB');

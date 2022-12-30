@@ -1,19 +1,18 @@
 import { isKeyValuePair, parseKeyValuePairs } from '../keyValuePairs';
 class UserDefinedAlias {
+    command;
     constructor(command) {
         this.command = command;
     }
-    invoke(context) {
+    async invoke(context) {
         const cli = context.cli;
         return cli.invokeCommand(this.command);
     }
 }
 export class AliasExecutor {
-    constructor() {
-        this.disallowOverride = true;
-        this.shortDescription = 'List and create aliases for commands';
-    }
-    invoke(context) {
+    disallowOverride = true;
+    shortDescription = 'List and create aliases for commands';
+    async invoke(context) {
         const cli = context.cli;
         const args = context.args.trim();
         if (args.length > 0) {

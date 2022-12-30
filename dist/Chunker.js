@@ -7,6 +7,8 @@ export var ChunkType;
     ChunkType[ChunkType["OTHER"] = 4] = "OTHER";
 })(ChunkType || (ChunkType = {}));
 export class Chunk {
+    content;
+    type;
     constructor(content, type = ChunkType.OTHER) {
         this.content = content;
         this.type = type;
@@ -16,12 +18,14 @@ export class Chunk {
     }
 }
 export class Chunker {
+    chunks = [];
+    delimiters;
+    limit;
+    buffer = '';
+    inEscape = false;
+    inDoubleQuote = false;
+    inWhitespace = false;
     constructor(delimiters = '', limit = -1) {
-        this.chunks = [];
-        this.buffer = '';
-        this.inEscape = false;
-        this.inDoubleQuote = false;
-        this.inWhitespace = false;
         this.delimiters = delimiters.split('').reduce((acc, item) => {
             acc[item] = true;
             return acc;

@@ -6,7 +6,7 @@ const ENV_KEY_TEST_PATTERN = /^[A-Za-z0-9_-]+$/;
 export class SetExecutor implements CommandExecutor {
     readonly shortDescription: string = 'Set an environment value';
 
-    invoke(context: CommandContext) {
+    async invoke(context: CommandContext) {
         const { cli, env } = context;
         const pairs = parseKeyValuePairs(context.args);
         pairs.forEach(pair => {

@@ -11,8 +11,13 @@ const osid = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
 export const PROMPT_ENV_VAR = 'PROMPT';
 export class CLI {
+    input;
+    output;
+    environment;
+    commands;
+    fs;
+    history = [];
     constructor(input, output) {
-        this.history = [];
         this.input = input;
         this.output = output;
         this.environment = new Environment({
@@ -22,28 +27,38 @@ export class CLI {
             USER: 'spud',
             TAB: '  '
         });
-        this.commands = Object.assign({ alias: new AliasExecutor(), env: new EnvExecutor(), help: new HelpExecutor(), history: new HistoryExecutor(), set: new SetExecutor(), clear: {
+        this.commands = {
+            alias: new AliasExecutor(),
+            env: new EnvExecutor(),
+            help: new HelpExecutor(),
+            history: new HistoryExecutor(),
+            set: new SetExecutor(),
+            clear: {
                 shortDescription: 'Clear the console',
-                invoke: context => {
+                invoke: async (context) => {
                     context.cli.clear();
                     return 0;
                 }
-            }, echo: {
+            },
+            echo: {
                 shortDescription: 'Say something',
-                invoke: (context) => {
+                invoke: async (context) => {
                     const cli = context.cli;
                     const env = context.env;
                     const str = env.interpolate(context.args);
                     cli.println(str);
                     return 0;
                 }
-            }, potato: {
+            },
+            potato: {
                 shortDescription: 'Print a cute, little potato',
-                invoke: context => {
+                invoke: async (context) => {
                     context.cli.println('🥔');
                     return 0;
                 }
-            } }, FS_COMMANDS);
+            },
+            ...FS_COMMANDS
+        };
         this.fs = new PotatoFS({ name: '', children: [] }, this.environment);
         this.init();
     }
@@ -73,7 +88,7 @@ export class CLI {
         const el = this.println.apply(this, args);
         el.classList.add('stderr');
     }
-    invokeCommand(line) {
+    async invokeCommand(line) {
         const cmd = commandChunker.append(line).flush()[0].content;
         // run command
         if (this.commands.hasOwnProperty(cmd)) {
@@ -100,7 +115,7 @@ export class CLI {
         frame.scrollTop = frame.scrollHeight;
     }
     ;
-    invokeInput() {
+    async invokeInput() {
         const line = (this.input.textContent || '').trim();
         this.input.textContent = '';
         // print entered line to output
@@ -108,7 +123,7 @@ export class CLI {
         el.dataset.prompt = this.environment.getString(PROMPT_ENV_VAR);
         // if there's something to do, do it
         if (line) {
-            const result = this.invokeCommand(line);
+            const result = await this.invokeCommand(line);
             if (result instanceof Error) {
                 this.printerr(result.message);
             }
@@ -128,6 +143,7 @@ export class CLI {
         this.input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
+                // TODO await this
                 this.invokeInput();
                 historyCursor = 0;
             }

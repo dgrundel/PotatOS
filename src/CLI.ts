@@ -39,14 +39,14 @@ export class CLI {
             set: new SetExecutor(),
             clear: {
                 shortDescription: 'Clear the console',
-                invoke: context => {
+                invoke: async context => {
                     context.cli.clear();
                     return 0;
                 }
             },
             echo: {
                 shortDescription: 'Say something',
-                invoke: (context) => {
+                invoke: async context => {
                     const cli = context.cli;
                     const env = context.env;
                     const str = env.interpolate(context.args);
@@ -56,7 +56,7 @@ export class CLI {
             },
             potato: {
                 shortDescription: 'Print a cute, little potato',
-                invoke: context => {
+                invoke: async context => {
                     context.cli.println('🥔');
                     return 0;
                 }
@@ -102,7 +102,7 @@ export class CLI {
         el.classList.add('stderr');
     }
 
-    invokeCommand(line: string): number | Error {
+    async invokeCommand(line: string): Promise<number | Error> {
         const cmd = commandChunker.append(line).flush()[0].content;
 
         // run command
@@ -134,7 +134,7 @@ export class CLI {
         frame.scrollTop = frame.scrollHeight;
     };
 
-    private invokeInput() {
+    private async invokeInput() {
         const line = (this.input.textContent || '').trim();
         this.input.textContent = '';
     
@@ -144,7 +144,7 @@ export class CLI {
     
         // if there's something to do, do it
         if (line) {
-            const result = this.invokeCommand(line);
+            const result = await this.invokeCommand(line);
 
             if (result instanceof Error) {
                 this.printerr(result.message);
@@ -170,6 +170,7 @@ export class CLI {
             if (e.key === 'Enter') {
                 e.preventDefault();
     
+                // TODO await this
                 this.invokeInput();
                 historyCursor = 0;
     

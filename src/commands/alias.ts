@@ -8,7 +8,7 @@ class UserDefinedAlias implements CommandExecutor {
         this.command = command;
     }
 
-    invoke(context: CommandContext) {
+    async invoke(context: CommandContext) {
         const cli = context.cli;
         return cli.invokeCommand(this.command);
     }
@@ -18,7 +18,7 @@ export class AliasExecutor implements CommandExecutor {
     readonly disallowOverride = true;
     readonly shortDescription: string = 'List and create aliases for commands';
 
-    invoke(context: CommandContext) {
+    async invoke(context: CommandContext) {
         const cli = context.cli;
         const args = context.args.trim();
         
