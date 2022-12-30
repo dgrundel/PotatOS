@@ -392,12 +392,16 @@
             return SEPARATOR + stack.join(SEPARATOR);
         }
         cd(path) {
-            // TODO: validate
             const resolved = this.resolve(path);
-            this.environment.put(CWD_ENV_VAR, resolved);
+            const node = this.get(resolved);
+            if (node) {
+                this.environment.put(CWD_ENV_VAR, resolved);
+            }
+            else {
+                throw new Error('Invalid path: ' + path);
+            }
         }
         cwd() {
-            // TODO: ensure never blank
             return this.environment.getString(CWD_ENV_VAR);
         }
         get(path) {
