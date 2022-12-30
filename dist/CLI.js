@@ -29,8 +29,12 @@ export class CLI {
         const el = this.println.apply(this, args);
         el.classList.add('stderr');
     }
+    getPrompt() {
+        const str = this.core.environment.getString(PROMPT_ENV_VAR);
+        return this.core.environment.interpolate(str);
+    }
     tick() {
-        this.input.parentNode.dataset.prompt = this.core.environment.getString(PROMPT_ENV_VAR);
+        this.input.parentNode.dataset.prompt = this.getPrompt();
         const frame = this.output.parentNode;
         frame.scrollTop = frame.scrollHeight;
         this.input.focus();
@@ -41,7 +45,7 @@ export class CLI {
         this.input.textContent = '';
         // print entered line to output
         const el = this.println(line);
-        el.dataset.prompt = this.core.environment.getString(PROMPT_ENV_VAR);
+        el.dataset.prompt = this.getPrompt();
         // if there's something to do, do it
         if (line) {
             const result = await this.core.invokeCommand(line, this);
@@ -62,7 +66,7 @@ export class CLI {
         this.println(OSID + '\n\n');
         document.title = OSID;
         this.core.environment.put(HISTORY_MAX_ENV_VAR, 100);
-        this.core.environment.put(PROMPT_ENV_VAR, '$');
+        this.core.environment.put(PROMPT_ENV_VAR, '$CWD $');
         this.input.addEventListener('keydown', (e) => {
             new Promise(resolve => {
                 if (e.key === 'Enter') {

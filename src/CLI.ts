@@ -39,8 +39,13 @@ export class CLI {
         el.classList.add('stderr');
     }
 
+    private getPrompt(): string {
+        const str = this.core.environment.getString(PROMPT_ENV_VAR);
+        return this.core.environment.interpolate(str);
+    }
+
     private tick() {
-        (this.input.parentNode as HTMLElement).dataset.prompt = this.core.environment.getString(PROMPT_ENV_VAR);
+        (this.input.parentNode as HTMLElement).dataset.prompt = this.getPrompt();
         
         const frame = (this.output.parentNode as HTMLElement);
         frame.scrollTop = frame.scrollHeight;
@@ -54,7 +59,7 @@ export class CLI {
     
         // print entered line to output
         const el = this.println(line);
-        el.dataset.prompt = this.core.environment.getString(PROMPT_ENV_VAR);
+        el.dataset.prompt = this.getPrompt();
     
         // if there's something to do, do it
         if (line) {
@@ -80,7 +85,7 @@ export class CLI {
         document.title = OSID;
 
         this.core.environment.put(HISTORY_MAX_ENV_VAR, 100);
-        this.core.environment.put(PROMPT_ENV_VAR, '$');
+        this.core.environment.put(PROMPT_ENV_VAR, '$CWD $');
     
         this.input.addEventListener('keydown', (e: KeyboardEvent) => {
             

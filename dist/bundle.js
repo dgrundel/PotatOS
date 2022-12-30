@@ -527,10 +527,8 @@
             invoke: async (context) => {
                 const { cli, args, fs, env } = context;
                 const nodes = fs.list(args.trim());
-                const tab = env.getString('TAB');
-                cli.println(`cwd: ${fs.cwd()}`);
                 nodes.forEach(node => {
-                    cli.println(tab + node.name);
+                    cli.println(node.name);
                 });
                 return 0;
             }
@@ -603,6 +601,14 @@
 
     const OSID = '🥔 PotatOS 0.1b';
     const commandChunker = new Chunker('', 1);
+    const createDefaultFileSystem = (env) => {
+        const fs = new PotatoFS({ name: '', children: [] }, env);
+        const homedir = env.interpolate('/home/$USER');
+        fs.mkdirp(homedir);
+        fs.mkdirp('/tmp');
+        fs.cd(homedir);
+        return fs;
+    };
     class OSCore {
         environment;
         fs;
@@ -613,7 +619,7 @@
                 USER: 'spud',
                 TAB: '  '
             });
-            this.fs = new PotatoFS({ name: '', children: [] }, this.environment);
+            this.fs = createDefaultFileSystem(this.environment);
             this.commands = {
                 alias: new AliasExecutor(),
                 env: new EnvExecutor(),
@@ -712,8 +718,12 @@
             const el = this.println.apply(this, args);
             el.classList.add('stderr');
         }
+        getPrompt() {
+            const str = this.core.environment.getString(PROMPT_ENV_VAR);
+            return this.core.environment.interpolate(str);
+        }
         tick() {
-            this.input.parentNode.dataset.prompt = this.core.environment.getString(PROMPT_ENV_VAR);
+            this.input.parentNode.dataset.prompt = this.getPrompt();
             const frame = this.output.parentNode;
             frame.scrollTop = frame.scrollHeight;
             this.input.focus();
@@ -724,7 +734,7 @@
             this.input.textContent = '';
             // print entered line to output
             const el = this.println(line);
-            el.dataset.prompt = this.core.environment.getString(PROMPT_ENV_VAR);
+            el.dataset.prompt = this.getPrompt();
             // if there's something to do, do it
             if (line) {
                 const result = await this.core.invokeCommand(line, this);
@@ -745,7 +755,7 @@
             this.println(OSID + '\n\n');
             document.title = OSID;
             this.core.environment.put(HISTORY_MAX_ENV_VAR, 100);
-            this.core.environment.put(PROMPT_ENV_VAR, '$');
+            this.core.environment.put(PROMPT_ENV_VAR, '$CWD $');
             this.input.addEventListener('keydown', (e) => {
                 new Promise(resolve => {
                     if (e.key === 'Enter') {

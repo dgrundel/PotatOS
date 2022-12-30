@@ -45,7 +45,7 @@ body {
 }
 [data-prompt]::before {
     content: attr(data-prompt);
-    padding-right: .25em;
+    padding-right: 1ex;
 }
 #out {
     white-space: pre;

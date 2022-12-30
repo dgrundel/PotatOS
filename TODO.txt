@@ -1,11 +1,17 @@
 commands
     nano
     help [command name]
+    
 
 basic file system
     mv
-    rm
     cp
+
+~ in paths
+
+include cwd in prompt
+
+env var interpolation in more places
 
 upload command will overwrite files without prompting
 ensure file names are unique in a folder

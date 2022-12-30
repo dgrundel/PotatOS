@@ -62,11 +62,9 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
         invoke: async context => {
             const { cli, args, fs, env } = context;
             const nodes = fs.list(args.trim());
-            const tab = env.getString('TAB');
     
-            cli.println(`cwd: ${fs.cwd()}`);
             nodes.forEach(node => {
-                cli.println(tab + node.name);
+                cli.println(node.name);
             });
     
             return 0;

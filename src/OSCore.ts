@@ -13,6 +13,15 @@ import { CLI } from './CLI';
 export const OSID = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
 
+const createDefaultFileSystem = (env: Environment): PotatoFS => {
+    const fs = new PotatoFS({ name: '', children: [] }, env);
+    const homedir = env.interpolate('/home/$USER');
+    fs.mkdirp(homedir);
+    fs.mkdirp('/tmp');
+    fs.cd(homedir);
+    return fs;
+};
+
 export class OSCore {
     readonly environment;
     readonly fs: PotatoFS;
@@ -24,7 +33,7 @@ export class OSCore {
             USER: 'spud',
             TAB: '  '
         });
-        this.fs = new PotatoFS({ name: '', children: [] }, this.environment);
+        this.fs = createDefaultFileSystem(this.environment);
         this.commands = {
             alias: new AliasExecutor(),
             env: new EnvExecutor(),
