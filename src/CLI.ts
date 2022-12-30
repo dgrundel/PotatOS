@@ -38,14 +38,14 @@ export class CLI {
             history: new HistoryExecutor(),
             set: new SetExecutor(),
             clear: {
-                shortDescription: 'Clear the console.',
+                shortDescription: 'Clear the console',
                 invoke: context => {
                     context.cli.clear();
                     return 0;
                 }
             },
             echo: {
-                shortDescription: 'Say something.',
+                shortDescription: 'Say something',
                 invoke: (context) => {
                     const cli = context.cli;
                     const env = context.env;
@@ -55,7 +55,7 @@ export class CLI {
                 }
             },
             potato: {
-                shortDescription: 'Print a cute, little potato.',
+                shortDescription: 'Print a cute, little potato',
                 invoke: context => {
                     context.cli.println('🥔');
                     return 0;

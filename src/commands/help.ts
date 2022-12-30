@@ -1,7 +1,7 @@
 import { CommandContext, CommandExecutor } from "../command";
 
 export class HelpExecutor implements CommandExecutor {
-    readonly shortDescription: string = 'Prints this message.';
+    readonly shortDescription: string = 'Prints this message';
 
     invoke(context: CommandContext) {
         const { cli, env } = context;

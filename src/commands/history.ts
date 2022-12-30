@@ -1,7 +1,7 @@
 import { CommandContext, CommandExecutor } from "../command";
 
 export class HistoryExecutor implements CommandExecutor {
-    readonly shortDescription: string = 'List previous commands.';
+    readonly shortDescription: string = 'List previously used commands';
 
     invoke(context: CommandContext) {
         const cli = context.cli;

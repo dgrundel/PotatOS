@@ -16,7 +16,7 @@ class UserDefinedAlias implements CommandExecutor {
 
 export class AliasExecutor implements CommandExecutor {
     readonly disallowOverride = true;
-    readonly shortDescription: string = 'List and create aliases for commands.';
+    readonly shortDescription: string = 'List and create aliases for commands';
 
     invoke(context: CommandContext) {
         const cli = context.cli;

@@ -1,7 +1,7 @@
 import { CommandContext, CommandExecutor } from "../command";
 
 export class EnvExecutor implements CommandExecutor {
-    readonly shortDescription: string = 'Display environment values.';
+    readonly shortDescription: string = 'Display environment values';
 
     invoke(context: CommandContext) {
         const { cli, env } = context;

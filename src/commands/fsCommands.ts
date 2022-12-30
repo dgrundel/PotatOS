@@ -18,7 +18,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
         }
     },
     ls: {
-        shortDescription: 'List files and folders.',
+        shortDescription: 'List files and folders',
         invoke: context => {
             const { cli, args, fs, env } = context;
             const nodes = fs.list(args.trim());
@@ -33,7 +33,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
         }
     },
     mkdirp: {
-        shortDescription: 'Create directories.',
+        shortDescription: 'Create directories',
         invoke: context => {
             const { args, fs } = context;
             fs.mkdirp(args.trim());
