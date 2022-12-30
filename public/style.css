@@ -1,3 +1,7 @@
+* {
+    color: var(--text-color);
+    text-shadow: 0 0 .2em var(--text-color);
+}
 html {
     font-size: 16px;
     line-height: 1.25rem;
@@ -10,8 +14,6 @@ body {
     margin: .25rem;
     padding: 0;
     background: var(--background-color);
-    color: var(--text-color);
-    text-shadow: 0 0 .2em var(--text-color);
 }
 #frame {
     --frame-offset: -3rem;
@@ -38,6 +40,7 @@ body {
     bottom: 0;
     background-image: radial-gradient(ellipse at 75% 25%, rgba(255, 255, 255, 0.12), transparent 50%);
 }
+
 [data-prompt] {
     margin: 0.5em 0;
     display: grid;
@@ -53,9 +56,8 @@ body {
 }
 #input {
     outline: none;
-    /* caret-color: transparent; */
     caret-shape: block;
 }
 .stderr {
-    color: #ff5f5f;
+    --text-color: #ff5f5f;
 }

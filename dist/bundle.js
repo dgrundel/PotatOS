@@ -707,16 +707,24 @@
         clear() {
             this.output.innerHTML = '';
         }
+        out(s, cls) {
+            const e = document.createElement('span');
+            e.className = cls;
+            e.textContent = s;
+            this.output.appendChild(e);
+            return e;
+        }
+        stdout(s) {
+            return this.out(s, 'stdout');
+        }
+        stderr(s) {
+            return this.out(s, 'stderr');
+        }
         println(...args) {
-            const el = document.createElement('div');
-            el.textContent = args.map(a => a.toString ? a.toString() : a).join(' ');
-            this.output.appendChild(el);
-            // this is a hack. There should be a better way to handle this.
-            return el;
+            return this.stdout(args.join(' ') + '\n');
         }
         printerr(...args) {
-            const el = this.println.apply(this, args);
-            el.classList.add('stderr');
+            return this.stderr(args.join(' '));
         }
         getPrompt() {
             const str = this.core.environment.getString(PROMPT_ENV_VAR);

@@ -25,18 +25,28 @@ export class CLI {
         this.output.innerHTML = '';
     }
 
-    println(...args: any[]): HTMLElement {
-        const el = document.createElement('div');
-        el.textContent = args.map(a => a.toString ? a.toString() : a).join(' ');
-        this.output.appendChild(el);
-        
-        // this is a hack. There should be a better way to handle this.
-        return el;
+    out(s: string, cls: string) {
+        const e = document.createElement('span');
+        e.className = cls;
+        e.textContent = s;
+        this.output.appendChild(e);
+        return e;
     }
 
-    printerr(...args: any[]) {
-        const el = this.println.apply(this, args);
-        el.classList.add('stderr');
+    stdout(s: string): HTMLElement {
+        return this.out(s, 'stdout');
+    }
+
+    stderr(s: string): HTMLElement {
+        return this.out(s, 'stderr');
+    }
+
+    println(...args: any[]): HTMLElement {
+        return this.stdout(args.join(' ') + '\n');
+    }
+
+    printerr(...args: any[]): HTMLElement {
+        return this.stderr(args.join(' '));
     }
 
     private getPrompt(): string {
