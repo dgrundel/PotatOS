@@ -3,7 +3,6 @@ commands
     nano
 
 basic file system
-    ls
     mv
     rm
     cp
