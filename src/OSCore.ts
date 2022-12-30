@@ -64,6 +64,17 @@ export class OSCore {
                     return 0;
                 }
             },
+            sleep: {
+                shortDescription: 'Wait a while',
+                invoke: async context => new Promise(resolve => {
+                    const { cli, args } = context;
+                    const seconds = +(args.trim());
+                    if (seconds > 0) {
+                        cli.println(`Sleeping for ${seconds} seconds.`);
+                        setTimeout(resolve, seconds * 1000);
+                    }
+                })
+            },
             ...FS_COMMANDS
         };
     }

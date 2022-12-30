@@ -29,7 +29,10 @@ export class CLI {
         const e = document.createElement('span');
         e.className = cls;
         e.textContent = s;
+        
         this.output.appendChild(e);
+        this.scroll();
+
         return e;
     }
 
@@ -47,6 +50,12 @@ export class CLI {
 
     printerr(...args: any[]): HTMLElement {
         return this.stderr(args.join(' '));
+    }
+
+    scroll() {
+        // scroll frame to input
+        const frame = this.output.parentNode as HTMLElement;
+        frame.scrollTop = frame.scrollHeight;
     }
 
     async readln(prompt: string, history: string[] = []): Promise<string> {
@@ -91,9 +100,7 @@ export class CLI {
             inputContainer.style.visibility = 'visible';
             this.input.focus();
 
-            // scroll frame to input
-            const frame = this.output.parentNode as HTMLElement;
-            frame.scrollTop = frame.scrollHeight;
+            this.scroll();
 
         }).then(value => {
             /*

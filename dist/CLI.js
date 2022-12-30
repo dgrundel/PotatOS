@@ -23,6 +23,7 @@ export class CLI {
         e.className = cls;
         e.textContent = s;
         this.output.appendChild(e);
+        this.scroll();
         return e;
     }
     stdout(s) {
@@ -36,6 +37,11 @@ export class CLI {
     }
     printerr(...args) {
         return this.stderr(args.join(' '));
+    }
+    scroll() {
+        // scroll frame to input
+        const frame = this.output.parentNode;
+        frame.scrollTop = frame.scrollHeight;
     }
     async readln(prompt, history = []) {
         const abortController = new AbortController();
@@ -70,9 +76,7 @@ export class CLI {
             inputContainer.dataset.prompt = prompt;
             inputContainer.style.visibility = 'visible';
             this.input.focus();
-            // scroll frame to input
-            const frame = this.output.parentNode;
-            frame.scrollTop = frame.scrollHeight;
+            this.scroll();
         }).then(value => {
             /*
              * Reset input

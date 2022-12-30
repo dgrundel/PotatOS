@@ -650,6 +650,17 @@
                         return 0;
                     }
                 },
+                sleep: {
+                    shortDescription: 'Wait a while',
+                    invoke: async (context) => new Promise(resolve => {
+                        const { cli, args } = context;
+                        const seconds = +(args.trim());
+                        if (seconds > 0) {
+                            cli.println(`Sleeping for ${seconds} seconds.`);
+                            setTimeout(resolve, seconds * 1000);
+                        }
+                    })
+                },
                 ...FS_COMMANDS
             };
         }
@@ -712,6 +723,7 @@
             e.className = cls;
             e.textContent = s;
             this.output.appendChild(e);
+            this.scroll();
             return e;
         }
         stdout(s) {
@@ -725,6 +737,11 @@
         }
         printerr(...args) {
             return this.stderr(args.join(' '));
+        }
+        scroll() {
+            // scroll frame to input
+            const frame = this.output.parentNode;
+            frame.scrollTop = frame.scrollHeight;
         }
         async readln(prompt, history = []) {
             const abortController = new AbortController();
@@ -759,9 +776,7 @@
                 inputContainer.dataset.prompt = prompt;
                 inputContainer.style.visibility = 'visible';
                 this.input.focus();
-                // scroll frame to input
-                const frame = this.output.parentNode;
-                frame.scrollTop = frame.scrollHeight;
+                this.scroll();
             }).then(value => {
                 /*
                  * Reset input
