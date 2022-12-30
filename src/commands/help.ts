@@ -4,8 +4,8 @@ export class HelpExecutor implements CommandExecutor {
     readonly shortDescription: string = 'Prints this message';
 
     async invoke(context: CommandContext) {
-        const { cli, env } = context;
-        const commands = cli.getRegisteredCommands();
+        const { core, cli, env } = context;
+        const commands = core.getRegisteredCommands();
         const tab = env.getString('TAB');
 
         cli.println('Available commands:');

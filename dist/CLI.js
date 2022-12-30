@@ -1,78 +1,19 @@
-import { Chunker } from './Chunker';
-import { AliasExecutor } from './commands/alias';
-import { EnvExecutor } from './commands/env';
-import { HelpExecutor } from './commands/help';
-import { HistoryExecutor } from './commands/history';
-import { SetExecutor } from './commands/set';
-import { Environment } from './Environment';
-import { CWD_ENV_VAR, PotatoFS } from './PotatoFS';
-import { FS_COMMANDS } from './commands/fsCommands';
-const osid = '🥔 PotatOS 0.1b';
-const commandChunker = new Chunker('', 1);
+import { OSID } from './OSCore';
 export const PROMPT_ENV_VAR = 'PROMPT';
+export const HISTORY_MAX_ENV_VAR = 'HISTORY_MAX';
 export class CLI {
+    core;
     input;
     output;
-    environment;
-    commands;
-    fs;
     history = [];
-    constructor(input, output) {
+    constructor(core, input, output) {
+        this.core = core;
         this.input = input;
         this.output = output;
-        this.environment = new Environment({
-            [PROMPT_ENV_VAR]: '$',
-            [CWD_ENV_VAR]: '/',
-            HISTORY_MAX: '100',
-            USER: 'spud',
-            TAB: '  '
-        });
-        this.commands = {
-            alias: new AliasExecutor(),
-            env: new EnvExecutor(),
-            help: new HelpExecutor(),
-            history: new HistoryExecutor(),
-            set: new SetExecutor(),
-            clear: {
-                shortDescription: 'Clear the console',
-                invoke: async (context) => {
-                    context.cli.clear();
-                    return 0;
-                }
-            },
-            echo: {
-                shortDescription: 'Say something',
-                invoke: async (context) => {
-                    const cli = context.cli;
-                    const env = context.env;
-                    const str = env.interpolate(context.args);
-                    cli.println(str);
-                    return 0;
-                }
-            },
-            potato: {
-                shortDescription: 'Print a cute, little potato',
-                invoke: async (context) => {
-                    context.cli.println('🥔');
-                    return 0;
-                }
-            },
-            ...FS_COMMANDS
-        };
-        this.fs = new PotatoFS({ name: '', children: [] }, this.environment);
         this.init();
     }
     getHistory() {
         return this.history.slice();
-    }
-    getRegisteredCommands() {
-        return this.commands;
-    }
-    registerCommand(name, command) {
-        if (this.commands[name] && this.commands[name].disallowOverride) {
-            throw new Error(`${name} cannot be overridden.`);
-        }
-        this.commands[name] = command;
     }
     clear() {
         this.output.innerHTML = '';
@@ -88,29 +29,8 @@ export class CLI {
         const el = this.println.apply(this, args);
         el.classList.add('stderr');
     }
-    async invokeCommand(line) {
-        const cmd = commandChunker.append(line).flush()[0].content;
-        // run command
-        if (this.commands.hasOwnProperty(cmd)) {
-            const executor = this.commands[cmd];
-            const args = line.substring(cmd.length).trim();
-            try {
-                return executor.invoke({
-                    command: cmd,
-                    args,
-                    cli: this,
-                    env: this.environment,
-                    fs: this.fs
-                });
-            }
-            catch (e) {
-                return e;
-            }
-        }
-        return new Error(`Unknown command "${cmd}"\nType "help" if you need some.`);
-    }
     tick() {
-        this.input.parentNode.dataset.prompt = this.environment.getString(PROMPT_ENV_VAR);
+        this.input.parentNode.dataset.prompt = this.core.environment.getString(PROMPT_ENV_VAR);
         const frame = this.output.parentNode;
         frame.scrollTop = frame.scrollHeight;
         this.input.focus();
@@ -121,16 +41,16 @@ export class CLI {
         this.input.textContent = '';
         // print entered line to output
         const el = this.println(line);
-        el.dataset.prompt = this.environment.getString(PROMPT_ENV_VAR);
+        el.dataset.prompt = this.core.environment.getString(PROMPT_ENV_VAR);
         // if there's something to do, do it
         if (line) {
-            const result = await this.invokeCommand(line);
+            const result = await this.core.invokeCommand(line, this);
             if (result instanceof Error) {
                 this.printerr(result.message);
             }
             // add history entry
             this.history.push(line);
-            const historyMax = this.environment.getNumber('HISTORY_MAX');
+            const historyMax = this.core.environment.getNumber(HISTORY_MAX_ENV_VAR);
             if (historyMax >= 0 && this.history.length > historyMax) {
                 this.history = this.history.slice(this.history.length - historyMax);
             }
@@ -139,8 +59,10 @@ export class CLI {
     ;
     init() {
         let historyCursor = 0;
-        this.println(osid + '\n\n');
-        document.title = osid;
+        this.println(OSID + '\n\n');
+        document.title = OSID;
+        this.core.environment.put(HISTORY_MAX_ENV_VAR, 100);
+        this.core.environment.put(PROMPT_ENV_VAR, '$');
         this.input.addEventListener('keydown', (e) => {
             new Promise(resolve => {
                 if (e.key === 'Enter') {

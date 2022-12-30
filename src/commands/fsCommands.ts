@@ -18,7 +18,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
                     };
                     reader.readAsText(node.blob);
                 } else {
-                    cli.printerr(`${node.name} is not a file.`);
+                    cli.printerr(`"${node.name}" is not a file.`);
                     resolve(1);
                 }
             });
@@ -45,7 +45,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
                 return 0;
             }
 
-            cli.printerr(`${node.name} is not a file.`);
+            cli.printerr(`"${node.name}" is not a file.`);
             return 1;
         }
     },

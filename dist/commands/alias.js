@@ -5,15 +5,15 @@ class UserDefinedAlias {
         this.command = command;
     }
     async invoke(context) {
-        const cli = context.cli;
-        return cli.invokeCommand(this.command);
+        const { cli, core } = context;
+        return core.invokeCommand(this.command, cli);
     }
 }
 export class AliasExecutor {
     disallowOverride = true;
     shortDescription = 'List and create aliases for commands';
     async invoke(context) {
-        const cli = context.cli;
+        const { cli, core } = context;
         const args = context.args.trim();
         if (args.length > 0) {
             const pairs = parseKeyValuePairs(context.args);
@@ -27,7 +27,7 @@ export class AliasExecutor {
                     return;
                 }
                 try {
-                    cli.registerCommand(item.key, new UserDefinedAlias(item.value));
+                    core.registerCommand(item.key, new UserDefinedAlias(item.value));
                 }
                 catch (e) {
                     cli.printerr(e.message);
@@ -35,7 +35,7 @@ export class AliasExecutor {
             });
         }
         else {
-            const registered = cli.getRegisteredCommands();
+            const registered = core.getRegisteredCommands();
             const aliases = Object.keys(registered)
                 .filter(key => registered[key] instanceof UserDefinedAlias);
             if (aliases.length > 0) {

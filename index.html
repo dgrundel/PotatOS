@@ -17,7 +17,10 @@
 
     <script src="./dist/bundle.js"></script>
     <script>
+        const core = new PotatOS.OSCore();
+        window._core = core;
         window._cli = new PotatOS.CLI(
+            core,
             document.getElementById('input'),
             document.getElementById('out')
         );

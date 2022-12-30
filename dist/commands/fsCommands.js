@@ -15,7 +15,7 @@ export const FS_COMMANDS = {
                     reader.readAsText(node.blob);
                 }
                 else {
-                    cli.printerr(`${node.name} is not a file.`);
+                    cli.printerr(`"${node.name}" is not a file.`);
                     resolve(1);
                 }
             });
@@ -38,7 +38,7 @@ export const FS_COMMANDS = {
                 reader.readAsDataURL(node.blob);
                 return 0;
             }
-            cli.printerr(`${node.name} is not a file.`);
+            cli.printerr(`"${node.name}" is not a file.`);
             return 1;
         }
     },

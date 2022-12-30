@@ -9,8 +9,8 @@ class UserDefinedAlias implements CommandExecutor {
     }
 
     async invoke(context: CommandContext) {
-        const cli = context.cli;
-        return cli.invokeCommand(this.command);
+        const { cli, core } = context;
+        return core.invokeCommand(this.command, cli);
     }
 }
 
@@ -19,7 +19,7 @@ export class AliasExecutor implements CommandExecutor {
     readonly shortDescription: string = 'List and create aliases for commands';
 
     async invoke(context: CommandContext) {
-        const cli = context.cli;
+        const { cli, core } = context;
         const args = context.args.trim();
         
         if (args.length > 0) {
@@ -36,14 +36,14 @@ export class AliasExecutor implements CommandExecutor {
                 }
                 
                 try {
-                    cli.registerCommand(item.key, new UserDefinedAlias(item.value));
+                    core.registerCommand(item.key, new UserDefinedAlias(item.value));
                 } catch (e: any) {
                     cli.printerr(e.message);
                 }
             });
 
         } else {
-            const registered = cli.getRegisteredCommands();
+            const registered = core.getRegisteredCommands();
             const aliases = Object.keys(registered)
                 .filter(key => registered[key] instanceof UserDefinedAlias);
             

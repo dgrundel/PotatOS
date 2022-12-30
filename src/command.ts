@@ -1,6 +1,7 @@
 import { CLI } from "./CLI";
 import { Environment } from "./Environment";
 import { PotatoFS } from "./PotatoFS";
+import { OSCore } from './OSCore';
 
 export interface CommandContext {
     command: string;
@@ -8,6 +9,7 @@ export interface CommandContext {
     cli: CLI;
     env: Environment;
     fs: PotatoFS;
+    core: OSCore;
 }
 
 export interface CommandExecutor {

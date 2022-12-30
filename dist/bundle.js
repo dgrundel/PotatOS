@@ -190,15 +190,15 @@
             this.command = command;
         }
         async invoke(context) {
-            const cli = context.cli;
-            return cli.invokeCommand(this.command);
+            const { cli, core } = context;
+            return core.invokeCommand(this.command, cli);
         }
     }
     class AliasExecutor {
         disallowOverride = true;
         shortDescription = 'List and create aliases for commands';
         async invoke(context) {
-            const cli = context.cli;
+            const { cli, core } = context;
             const args = context.args.trim();
             if (args.length > 0) {
                 const pairs = parseKeyValuePairs(context.args);
@@ -212,7 +212,7 @@
                         return;
                     }
                     try {
-                        cli.registerCommand(item.key, new UserDefinedAlias(item.value));
+                        core.registerCommand(item.key, new UserDefinedAlias(item.value));
                     }
                     catch (e) {
                         cli.printerr(e.message);
@@ -220,7 +220,7 @@
                 });
             }
             else {
-                const registered = cli.getRegisteredCommands();
+                const registered = core.getRegisteredCommands();
                 const aliases = Object.keys(registered)
                     .filter(key => registered[key] instanceof UserDefinedAlias);
                 if (aliases.length > 0) {
@@ -251,8 +251,8 @@
     class HelpExecutor {
         shortDescription = 'Prints this message';
         async invoke(context) {
-            const { cli, env } = context;
-            const commands = cli.getRegisteredCommands();
+            const { core, cli, env } = context;
+            const commands = core.getRegisteredCommands();
             const tab = env.getString('TAB');
             cli.println('Available commands:');
             Object.keys(commands).sort()
@@ -483,7 +483,7 @@
                         reader.readAsText(node.blob);
                     }
                     else {
-                        cli.printerr(`${node.name} is not a file.`);
+                        cli.printerr(`"${node.name}" is not a file.`);
                         resolve(1);
                     }
                 });
@@ -506,7 +506,7 @@
                     reader.readAsDataURL(node.blob);
                     return 0;
                 }
-                cli.printerr(`${node.name} is not a file.`);
+                cli.printerr(`"${node.name}" is not a file.`);
                 return 1;
             }
         },
@@ -574,26 +574,19 @@
         }
     };
 
-    const osid = '🥔 PotatOS 0.1b';
+    const OSID = '🥔 PotatOS 0.1b';
     const commandChunker = new Chunker('', 1);
-    const PROMPT_ENV_VAR = 'PROMPT';
-    class CLI {
-        input;
-        output;
+    class OSCore {
         environment;
-        commands;
         fs;
-        history = [];
-        constructor(input, output) {
-            this.input = input;
-            this.output = output;
+        commands;
+        constructor() {
             this.environment = new Environment({
-                [PROMPT_ENV_VAR]: '$',
                 [CWD_ENV_VAR]: '/',
-                HISTORY_MAX: '100',
                 USER: 'spud',
                 TAB: '  '
             });
+            this.fs = new PotatoFS({ name: '', children: [] }, this.environment);
             this.commands = {
                 alias: new AliasExecutor(),
                 env: new EnvExecutor(),
@@ -626,11 +619,6 @@
                 },
                 ...FS_COMMANDS
             };
-            this.fs = new PotatoFS({ name: '', children: [] }, this.environment);
-            this.init();
-        }
-        getHistory() {
-            return this.history.slice();
         }
         getRegisteredCommands() {
             return this.commands;
@@ -640,6 +628,48 @@
                 throw new Error(`${name} cannot be overridden.`);
             }
             this.commands[name] = command;
+        }
+        async invokeCommand(line, cli) {
+            const cmd = commandChunker.append(line).flush()[0].content;
+            // run command
+            if (this.commands.hasOwnProperty(cmd)) {
+                const executor = this.commands[cmd];
+                const args = line.substring(cmd.length).trim();
+                try {
+                    return executor.invoke({
+                        command: cmd,
+                        args,
+                        cli,
+                        env: this.environment,
+                        fs: this.fs,
+                        core: this
+                    }).catch(err => {
+                        return err;
+                    });
+                }
+                catch (e) {
+                    return e;
+                }
+            }
+            return new Error(`Unknown command "${cmd}"\nType "help" if you need some.`);
+        }
+    }
+
+    const PROMPT_ENV_VAR = 'PROMPT';
+    const HISTORY_MAX_ENV_VAR = 'HISTORY_MAX';
+    class CLI {
+        core;
+        input;
+        output;
+        history = [];
+        constructor(core, input, output) {
+            this.core = core;
+            this.input = input;
+            this.output = output;
+            this.init();
+        }
+        getHistory() {
+            return this.history.slice();
         }
         clear() {
             this.output.innerHTML = '';
@@ -655,29 +685,8 @@
             const el = this.println.apply(this, args);
             el.classList.add('stderr');
         }
-        async invokeCommand(line) {
-            const cmd = commandChunker.append(line).flush()[0].content;
-            // run command
-            if (this.commands.hasOwnProperty(cmd)) {
-                const executor = this.commands[cmd];
-                const args = line.substring(cmd.length).trim();
-                try {
-                    return executor.invoke({
-                        command: cmd,
-                        args,
-                        cli: this,
-                        env: this.environment,
-                        fs: this.fs
-                    });
-                }
-                catch (e) {
-                    return e;
-                }
-            }
-            return new Error(`Unknown command "${cmd}"\nType "help" if you need some.`);
-        }
         tick() {
-            this.input.parentNode.dataset.prompt = this.environment.getString(PROMPT_ENV_VAR);
+            this.input.parentNode.dataset.prompt = this.core.environment.getString(PROMPT_ENV_VAR);
             const frame = this.output.parentNode;
             frame.scrollTop = frame.scrollHeight;
             this.input.focus();
@@ -688,16 +697,16 @@
             this.input.textContent = '';
             // print entered line to output
             const el = this.println(line);
-            el.dataset.prompt = this.environment.getString(PROMPT_ENV_VAR);
+            el.dataset.prompt = this.core.environment.getString(PROMPT_ENV_VAR);
             // if there's something to do, do it
             if (line) {
-                const result = await this.invokeCommand(line);
+                const result = await this.core.invokeCommand(line, this);
                 if (result instanceof Error) {
                     this.printerr(result.message);
                 }
                 // add history entry
                 this.history.push(line);
-                const historyMax = this.environment.getNumber('HISTORY_MAX');
+                const historyMax = this.core.environment.getNumber(HISTORY_MAX_ENV_VAR);
                 if (historyMax >= 0 && this.history.length > historyMax) {
                     this.history = this.history.slice(this.history.length - historyMax);
                 }
@@ -706,8 +715,10 @@
         ;
         init() {
             let historyCursor = 0;
-            this.println(osid + '\n\n');
-            document.title = osid;
+            this.println(OSID + '\n\n');
+            document.title = OSID;
+            this.core.environment.put(HISTORY_MAX_ENV_VAR, 100);
+            this.core.environment.put(PROMPT_ENV_VAR, '$');
             this.input.addEventListener('keydown', (e) => {
                 new Promise(resolve => {
                     if (e.key === 'Enter') {
@@ -745,6 +756,9 @@
     }
 
     exports.CLI = CLI;
+    exports.HISTORY_MAX_ENV_VAR = HISTORY_MAX_ENV_VAR;
+    exports.OSCore = OSCore;
+    exports.OSID = OSID;
     exports.PROMPT_ENV_VAR = PROMPT_ENV_VAR;
 
 }));
