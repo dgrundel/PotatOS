@@ -1,4 +1,4 @@
-* {
+*, *::before, *::after {
     color: var(--text-color);
     text-shadow: 0 0 .2em var(--text-color);
 }
@@ -47,6 +47,7 @@ body {
     grid-template-columns: auto 1fr;
 }
 [data-prompt]::before {
+    --text-color: #c1be94;
     content: attr(data-prompt);
     padding-right: 1ex;
 }
