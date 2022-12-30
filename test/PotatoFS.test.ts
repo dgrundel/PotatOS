@@ -66,6 +66,23 @@ describe('PotatoFS', () => {
         it('removes trailing slashes', () => {
             expect(fs.resolve('/home/spud/')).toBe('/home/spud');
         });
+
+        it('removes empty segments', () => {
+            expect(fs.resolve('/home///spud')).toBe('/home/spud');
+        });
+
+        it('removes single dots', () => {
+            expect(fs.resolve('/home/././spud')).toBe('/home/spud');
+        });
+
+        it('resolves single leading dots', () => {
+            fs.cd('/home')
+            expect(fs.resolve('./sprout')).toBe('/home/sprout');
+        });
+
+        it('resolves double dots', () => {
+            expect(fs.resolve('/home/spud/../sprout')).toBe('/home/sprout');
+        });
     });
 
     describe('splitPath', () => {
@@ -76,6 +93,26 @@ describe('PotatoFS', () => {
         it('removes trailing empty from others', () => {
             expect(PotatoFS.splitPath('/home/foo/')).toMatchObject(['', 'home', 'foo']);
         })
+    });
+
+    describe('getAbsolutePath', () => {
+        it('returns abs path string', () => {
+            const path = '/test/getAbsolutePath/my/nested/dir';
+            const node = fs.mkdirp('/test/getAbsolutePath/my/nested/dir');
+            
+            expect(PotatoFS.getAbsolutePath(node)).toBe(path);
+        });
+    });
+
+    describe('mkdirp', () => {
+        it('creates dirs', () => {
+            const created = fs.mkdirp('/tmp/foo/bar');
+            expect(created.name).toBe('bar');
+            expect(created.parent!.name).toBe('foo');
+            expect(created.parent!.parent!.name).toBe('tmp');
+
+            expect(fs.list('/tmp/foo')[0].name).toBe('bar');
+        });
     });
 
     describe('list', () => {

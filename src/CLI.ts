@@ -6,7 +6,7 @@ import { HistoryExecutor } from './commands/history';
 import { CommandExecutor } from './command';
 import { SetExecutor } from './commands/set';
 import { Environment } from './Environment';
-import { CWD_ENV_VAR } from './FileSystem';
+import { CWD_ENV_VAR } from './PotatoFS';
 
 const osid = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
