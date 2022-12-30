@@ -147,7 +147,7 @@ export class CLI {
     };
 
     private init() {
-        this.println(OSID + '\n\n');
+        this.println(OSID + '\n');
         document.title = OSID;
 
         this.core.environment.put(HISTORY_MAX_ENV_VAR, 100);

@@ -832,7 +832,7 @@
         }
         ;
         init() {
-            this.println(OSID + '\n\n');
+            this.println(OSID + '\n');
             document.title = OSID;
             this.core.environment.put(HISTORY_MAX_ENV_VAR, 100);
             this.core.environment.put(PROMPT_ENV_VAR, '$CWD $');
