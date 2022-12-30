@@ -21,7 +21,7 @@ describe('PotatoFS', () => {
                             children: [
                                 {
                                     name: 'test.json',
-                                    body: new Blob([
+                                    blob: new Blob([
                                         JSON.stringify({ message: 'test' }, null, 2)
                                     ], {
                                         type: "application/json",
