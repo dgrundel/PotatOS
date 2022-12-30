@@ -49,23 +49,74 @@ export class CLI {
         return this.stderr(args.join(' '));
     }
 
+    async readln(prompt: string, history: string[] = []): Promise<string> {
+        const abortController = new AbortController();
+        const inputContainer = this.input.parentNode as HTMLElement;
+
+        return new Promise<string>(resolve => {
+            let historyCursor = 0;
+
+            const keydown = (e: KeyboardEvent) => {
+        
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+        
+                    resolve(this.input.textContent || '');
+                    historyCursor = 0;
+        
+                } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+
+                    if (e.key === 'ArrowDown') { // cursor += 1
+                        historyCursor = historyCursor === history.length - 1 ? 0 : (historyCursor + 1);
+                    } else { // ArrowUp, cursor -= 1
+                        historyCursor = (historyCursor === 0 ? history.length : historyCursor) - 1;
+                    }
+                    this.input.textContent = history[historyCursor];
+                }
+            };
+    
+            // attach listener
+            this.input.addEventListener('keydown', keydown, {
+                signal: abortController.signal
+            });
+
+            /*
+             * Prepare input
+             */
+            
+            // show requested prompt
+            inputContainer.dataset.prompt = prompt;
+        
+            inputContainer.style.visibility = 'visible';
+            this.input.focus();
+
+            // scroll frame to input
+            const frame = this.output.parentNode as HTMLElement;
+            frame.scrollTop = frame.scrollHeight;
+
+        }).then(value => {
+            /*
+             * Reset input
+             */
+            inputContainer.style.visibility = 'hidden';
+            this.input.textContent = '';
+            inputContainer.dataset.prompt = this.getPrompt();
+
+            // remove listener
+            abortController.abort();
+
+            return value;
+        });
+    }
+
     private getPrompt(): string {
         const str = this.core.environment.getString(PROMPT_ENV_VAR);
         return this.core.environment.interpolate(str);
     }
 
-    private tick() {
-        (this.input.parentNode as HTMLElement).dataset.prompt = this.getPrompt();
-        
-        const frame = (this.output.parentNode as HTMLElement);
-        frame.scrollTop = frame.scrollHeight;
-
-        this.input.focus();
-    };
-
-    private async invokeInput() {
-        const line = (this.input.textContent || '').trim();
-        this.input.textContent = '';
+    private async invokeInput(str: string) {
+        const line = (str || '').trim();
     
         // print entered line to output
         const el = this.println(line);
@@ -89,52 +140,23 @@ export class CLI {
     };
 
     private init() {
-        let historyCursor = 0;
-
         this.println(OSID + '\n\n');
         document.title = OSID;
 
         this.core.environment.put(HISTORY_MAX_ENV_VAR, 100);
         this.core.environment.put(PROMPT_ENV_VAR, '$CWD $');
     
-        this.input.addEventListener('keydown', (e: KeyboardEvent) => {
-            
-            new Promise<void>(resolve => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-        
-                    // TODO await this
-                    const inputContainer = this.input.parentNode as HTMLElement;
-                    inputContainer.style.visibility = 'hidden';
-                    this.invokeInput().then(() => {
-                        inputContainer.style.visibility = 'visible';
-                        resolve();
-                    });
-                    historyCursor = 0;
-        
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-        
-                    historyCursor = (historyCursor === 0 ? this.history.length : historyCursor) - 1;
-                    this.input.textContent = this.history[historyCursor];
-                    resolve();
-                    
-                } else if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    
-                    historyCursor = historyCursor === this.history.length - 1 ? 0 : (historyCursor + 1);
-                    this.input.textContent = this.history[historyCursor];
-                    resolve();
-                }
-            }).then(() => {
-                this.tick();
-            });
-        });
-    
         document.documentElement.addEventListener('click', e => {
             this.input.focus();
         });
-    
-        this.tick();
+
+        const awaitInput = (): Promise<void> => {
+            return this.readln(this.getPrompt(), this.history)
+            .then(line => this.invokeInput(line))
+            .then(awaitInput);
+        };
+
+        awaitInput();
     }
+
 }
