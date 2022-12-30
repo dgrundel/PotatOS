@@ -9,6 +9,7 @@ import { Environment } from './Environment';
 import { CWD_ENV_VAR, PotatoFS } from './PotatoFS';
 import { FS_COMMANDS } from './commands/fsCommands';
 import { CLI } from './CLI';
+import { BlackjackExecutor } from './commands/blackjack';
 
 export const OSID = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
@@ -36,6 +37,7 @@ export class OSCore {
         this.fs = createDefaultFileSystem(this.environment);
         this.commands = {
             alias: new AliasExecutor(),
+            blackjack: BlackjackExecutor,
             env: new EnvExecutor(),
             help: new HelpExecutor(),
             history: new HistoryExecutor(),
