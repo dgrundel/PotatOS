@@ -17,11 +17,15 @@ export interface PotatoFSFile extends PotatoFSNode {
     body: Blob;
 }
 
+export interface PotatoFSRoot extends PotatoFSDir {
+    name: '';
+}
+
 export class PotatoFS {
-    private readonly root: PotatoFSNode;
+    private readonly root: PotatoFSRoot;
     private readonly environment: Environment;
 
-    constructor(root: PotatoFSNode, environment: Environment) {
+    constructor(root: PotatoFSRoot, environment: Environment) {
         this.root = root;
         this.environment = environment;
     }
@@ -103,7 +107,7 @@ export class PotatoFS {
             throw new Error(`Unexpected node value: ${segments[0]}`);
         }
 
-        let node = this.root;
+        let node: PotatoFSNode = this.root;
         segments.shift(); // remove root node
         while (segments.length > 0) {
             if (!PotatoFS.isDir(node)) {
@@ -132,7 +136,7 @@ export class PotatoFS {
             throw new Error(`Unexpected node value: ${segments[0]}`);
         }
 
-        let node = this.root;
+        let node: PotatoFSNode = this.root;
         segments.shift(); // remove root node
         while (segments.length > 0) {
             if (!PotatoFS.isDir(node)) {

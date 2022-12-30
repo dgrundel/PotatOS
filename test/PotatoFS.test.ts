@@ -1,9 +1,9 @@
 import { Environment } from '../src/Environment';
-import { CWD_ENV_VAR, PotatoFS, PotatoFSDir, PotatoFSFile, PotatoFSNode } from '../src/PotatoFS';
+import { CWD_ENV_VAR, PotatoFS, PotatoFSDir, PotatoFSFile, PotatoFSRoot } from '../src/PotatoFS';
 
 describe('PotatoFS', () => {
     let env: Environment;
-    let root: PotatoFSDir;
+    let root: PotatoFSRoot;
     let fs: PotatoFS;
     
     beforeEach(() => {

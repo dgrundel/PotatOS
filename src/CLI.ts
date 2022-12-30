@@ -6,7 +6,8 @@ import { HistoryExecutor } from './commands/history';
 import { CommandExecutor } from './command';
 import { SetExecutor } from './commands/set';
 import { Environment } from './Environment';
-import { CWD_ENV_VAR } from './PotatoFS';
+import { CWD_ENV_VAR, PotatoFS } from './PotatoFS';
+import { FS_COMMANDS } from './commands/fsCommands';
 
 const osid = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
@@ -15,8 +16,9 @@ export const PROMPT_ENV_VAR = 'PROMPT';
 export class CLI {
     private readonly input: HTMLInputElement;
     private readonly output: HTMLElement;
-    private readonly environment;    
+    private readonly environment;
     private readonly commands: Record<string, CommandExecutor>;
+    private readonly fs: PotatoFS;
     private history: string[] = [];
 
     constructor(input: HTMLInputElement, output: HTMLElement) {
@@ -58,9 +60,11 @@ export class CLI {
                     context.cli.println('🥔');
                     return 0;
                 }
-            }
+            },
+            ...FS_COMMANDS
         };
-
+        this.fs = new PotatoFS({ name: '', children: [] }, this.environment);
+        
         this.init();
     }
 
@@ -111,7 +115,8 @@ export class CLI {
                     command: cmd,
                     args,
                     cli: this,
-                    env: this.environment
+                    env: this.environment,
+                    fs: this.fs
                 });
             } catch (e) {
                 return e as Error;
