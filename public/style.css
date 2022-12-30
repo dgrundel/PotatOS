@@ -62,3 +62,25 @@ body {
 .stderr {
     --text-color: #ff5f5f;
 }
+
+#scan::after { 
+    --scan-width: 2px;
+    --scan-color: rgba(0,0,0,.15);
+
+    z-index: -1;
+
+    display: block;
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(
+        to bottom,
+        transparent 50%,
+        var(--scan-color) 51%
+    );
+    background-size: 100% calc(var(--scan-width) * 2);
+    border-radius: 2.5rem;
+}

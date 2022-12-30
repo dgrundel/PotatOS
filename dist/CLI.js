@@ -75,7 +75,7 @@ export class CLI {
             // show requested prompt
             inputContainer.dataset.prompt = prompt;
             inputContainer.style.visibility = 'visible';
-            this.input.focus();
+            this.focusInput();
             this.scroll();
         }).then(value => {
             /*
@@ -88,6 +88,9 @@ export class CLI {
             abortController.abort();
             return value;
         });
+    }
+    focusInput() {
+        this.input.focus();
     }
     getPrompt() {
         const str = this.core.environment.getString(PROMPT_ENV_VAR);
@@ -118,8 +121,11 @@ export class CLI {
         document.title = OSID;
         this.core.environment.put(HISTORY_MAX_ENV_VAR, 100);
         this.core.environment.put(PROMPT_ENV_VAR, '$CWD $');
-        document.documentElement.addEventListener('click', e => {
-            this.input.focus();
+        document.body.addEventListener('click', e => {
+            const selection = document.getSelection();
+            if (!selection || selection.isCollapsed) {
+                this.focusInput();
+            }
         });
         const awaitInput = () => {
             return this.readln(this.getPrompt(), this.history)

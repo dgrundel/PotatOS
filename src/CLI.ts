@@ -98,7 +98,7 @@ export class CLI {
             inputContainer.dataset.prompt = prompt;
         
             inputContainer.style.visibility = 'visible';
-            this.input.focus();
+            this.focusInput();
 
             this.scroll();
 
@@ -115,6 +115,10 @@ export class CLI {
 
             return value;
         });
+    }
+
+    private focusInput(): void {
+        this.input.focus();
     }
 
     private getPrompt(): string {
@@ -153,8 +157,11 @@ export class CLI {
         this.core.environment.put(HISTORY_MAX_ENV_VAR, 100);
         this.core.environment.put(PROMPT_ENV_VAR, '$CWD $');
     
-        document.documentElement.addEventListener('click', e => {
-            this.input.focus();
+        document.body.addEventListener('click', e => {
+            const selection = document.getSelection();
+            if (!selection || selection.isCollapsed) {
+                this.focusInput();
+            }
         });
 
         const awaitInput = (): Promise<void> => {
