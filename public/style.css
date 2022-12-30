@@ -52,7 +52,7 @@ body {
     padding-right: 1ex;
 }
 #out {
-    white-space: pre;
+    white-space: pre-wrap;
     word-break: break-all;
 }
 #input {
