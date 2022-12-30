@@ -114,7 +114,7 @@ export class PotatoFS {
         segments.shift(); // remove root node
         while (segments.length > 0) {
             if (!PotatoFS.isDir(node)) {
-                throw new Error(`Unexpected non-parent node "${node.name}"`);
+                throw new Error(`Unexpected non-directory node "${node.name}"`);
             }
 
             const name = segments.shift();
@@ -143,7 +143,7 @@ export class PotatoFS {
         segments.shift(); // remove root node
         while (segments.length > 0) {
             if (!PotatoFS.isDir(node)) {
-                throw new Error(`Unexpected non-parent node "${node.name}"`);
+                throw new Error(`Unexpected non-directory node "${node.name}"`);
             }
 
             const name = segments.shift();
