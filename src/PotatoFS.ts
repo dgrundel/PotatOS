@@ -14,7 +14,7 @@ export interface PotatoFSDir extends PotatoFSNode {
 }
 
 export interface PotatoFSFile extends PotatoFSNode {
-    buffer: ArrayBuffer;
+    blob: Blob;
 }
 
 export interface PotatoFSRoot extends PotatoFSDir {
@@ -44,7 +44,7 @@ export class PotatoFS {
     }
 
     static isFile(node: PotatoFSNode): node is PotatoFSFile {
-        return node && node.hasOwnProperty('buffer');
+        return node && node.hasOwnProperty('blob');
     }
 
     static splitPath(path: string): string[] {

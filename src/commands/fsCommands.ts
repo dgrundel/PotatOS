@@ -9,8 +9,35 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
             const node = fs.get(args.trim());
 
             if (PotatoFS.isFile(node)) {
-                const str = new TextDecoder().decode(node.buffer);
-                cli.println(str);
+                const reader = new FileReader();
+                reader.onload = e => {
+                    cli.println(e.target!.result);
+                };
+                reader.readAsText(node.blob);
+
+                return 0;
+            }
+
+            cli.printerr(`${node.name} is not a file.`);
+            return 1;
+        }
+    },
+    download: {
+        shortDescription: 'Download a file to your computer',
+        invoke: context => {
+            const { args, fs, cli } = context;
+            const node = fs.get(args.trim());
+
+            if (PotatoFS.isFile(node)) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const a: HTMLAnchorElement = document.createElement('a');
+                    a.href = e.target!.result as string;
+                    a.download = node.name;
+                    a.click();
+                };
+                reader.readAsDataURL(node.blob);
+
                 return 0;
             }
 
@@ -60,8 +87,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
     upload: {
         shortDescription: 'Upload a file to the current directory',
         invoke: context => {
-            const { fs, cli, env } = context;
-            const tab = env.getString('TAB');
+            const { fs, cli } = context;
 
             const input: HTMLInputElement = document.createElement('input');
             input.type = 'file';
@@ -71,21 +97,15 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
                 cli.println(`Uploading ${files.length} file(s).`);
 
                 files.forEach(file => {
-                    cli.println(`${file.name} (${file.size} bytes)`);
-
-                    const reader = new FileReader();
-                    reader.onload = e => { 
-                        const cwd = fs.get(fs.cwd()) as PotatoFSDir;
-                        const fsnode: PotatoFSFile = {
-                            name: file.name,
-                            parent: cwd,
-                            buffer: e.target!.result as ArrayBuffer
-                        };
-                        cwd.children.push(fsnode);
-
-                        cli.println(`${file.name} uploaded to ${fs.cwd()}`);
+                    const cwd = fs.get(fs.cwd()) as PotatoFSDir;
+                    const fsnode: PotatoFSFile = {
+                        name: file.name,
+                        parent: cwd,
+                        blob: file
                     };
-                    reader.readAsArrayBuffer(file);
+                    cwd.children.push(fsnode);
+
+                    cli.println(`${file.name} (${file.size} bytes) uploaded to ${fs.cwd()}`);
                 });
                 
             });
