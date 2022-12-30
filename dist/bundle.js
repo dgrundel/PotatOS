@@ -493,6 +493,14 @@
                 });
             }
         },
+        cd: {
+            shortDescription: 'Change current working directory',
+            invoke: async (context) => {
+                const { args, fs } = context;
+                fs.cd(args.trim());
+                return 0;
+            }
+        },
         download: {
             shortDescription: 'Download a file to your computer',
             invoke: async (context) => {
@@ -514,22 +522,6 @@
                 return 1;
             }
         },
-        cd: {
-            shortDescription: 'Change current working directory',
-            invoke: async (context) => {
-                const { args, fs } = context;
-                fs.cd(args.trim());
-                return 0;
-            }
-        },
-        pwd: {
-            shortDescription: 'Print current working directory',
-            invoke: async (context) => {
-                const { cli, fs } = context;
-                cli.println(fs.cwd());
-                return 0;
-            }
-        },
         ls: {
             shortDescription: 'List files and folders',
             invoke: async (context) => {
@@ -548,6 +540,37 @@
             invoke: async (context) => {
                 const { args, fs } = context;
                 fs.mkdirp(args.trim());
+                return 0;
+            }
+        },
+        pwd: {
+            shortDescription: 'Print current working directory',
+            invoke: async (context) => {
+                const { cli, fs } = context;
+                cli.println(fs.cwd());
+                return 0;
+            }
+        },
+        rm: {
+            shortDescription: 'Remove a file',
+            invoke: async (context) => {
+                const { args, fs, cli } = context;
+                const node = fs.get(args.trim());
+                if (PotatoFS.isFile(node)) {
+                    const i = node.parent.children.findIndex(n => n === node);
+                    if (i !== -1) {
+                        node.parent.children.splice(i, 1);
+                    }
+                    else {
+                        // wtf
+                        cli.printerr(`Internal error.`);
+                        return 1;
+                    }
+                }
+                else {
+                    cli.printerr(`${node.name} is not a file.`);
+                    return 1;
+                }
                 return 0;
             }
         },

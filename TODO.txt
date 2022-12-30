@@ -1,6 +1,6 @@
 commands
-    cat
     nano
+    help [command name]
 
 basic file system
     mv
@@ -8,6 +8,7 @@ basic file system
     cp
 
 upload command will overwrite files without prompting
+ensure file names are unique in a folder
 
 "apps" in iframe
     access to core libraries via message passing
