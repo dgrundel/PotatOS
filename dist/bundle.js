@@ -248,6 +248,28 @@
         }
     }
 
+    var Formatter;
+    (function (Formatter) {
+        Formatter.pad = (str, width) => {
+            const padding = new Array(width - str.length).fill(' ').join('');
+            return str + padding;
+        };
+        Formatter.table = (rows, gap = 1) => {
+            const widths = [];
+            const gapStr = new Array(gap).fill(' ').join('');
+            rows.forEach(cols => {
+                cols.forEach((value, i) => {
+                    widths[i] = Math.max(widths[i] || 0, value.length);
+                });
+            });
+            return rows.map(cols => {
+                return cols
+                    .map((value, i) => Formatter.pad(value, widths[i]))
+                    .join(gapStr);
+            }).join('\n');
+        };
+    })(Formatter || (Formatter = {}));
+
     class HelpExecutor {
         shortDescription = 'Prints this message';
         help = new Array(1024).fill('help').join(' ');
@@ -272,11 +294,13 @@
             else { // no specific command requested
                 cli.println('Use "help [command]" to get more info on a specific command.\n');
                 cli.println('Available commands:\n');
-                Object.keys(commands).sort()
+                const values = Object.keys(commands).sort()
                     .filter(cmd => !!commands[cmd].shortDescription)
-                    .forEach(cmd => {
-                    cli.println(tab + cmd + ' - ' + commands[cmd].shortDescription);
+                    .map(cmd => {
+                    return [tab + cmd, commands[cmd].shortDescription];
                 });
+                const table = Formatter.table(values, 2);
+                cli.println(table);
             }
             return 0;
         }

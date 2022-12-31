@@ -1,4 +1,5 @@
 import { CommandContext, CommandExecutor } from "../command";
+import { Formatter } from '../Formatter';
 
 export class HelpExecutor implements CommandExecutor {
     readonly shortDescription: string = 'Prints this message';
@@ -27,11 +28,15 @@ export class HelpExecutor implements CommandExecutor {
 
             cli.println('Use "help [command]" to get more info on a specific command.\n');
             cli.println('Available commands:\n');
-            Object.keys(commands).sort()
+
+
+            const values = Object.keys(commands).sort()
                 .filter(cmd => !!commands[cmd].shortDescription)
-                .forEach(cmd => {
-                    cli.println(tab + cmd + ' - ' + commands[cmd].shortDescription);
+                .map(cmd => {
+                    return [tab + cmd, commands[cmd].shortDescription!];
                 });
+            const table = Formatter.table(values, 2);
+            cli.println(table);
         }
 
         return 0;
