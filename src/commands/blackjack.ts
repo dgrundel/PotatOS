@@ -91,7 +91,6 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
         deck.pop()!,
         deck.pop()!
     ];
-    const dealerSum = calcHand(dealerHand);
 
     const playerHand: Card[] = [
         deck.pop()!,
@@ -100,6 +99,7 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
 
     const endGame = async (): Promise<void> => {
         const playerSum = calcHand(playerHand);
+        const dealerSum = calcHand(dealerHand);
 
         if (dealerSum > BLACKJACK) {
             cli.println('Dealer busts! You win!');
@@ -119,14 +119,32 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
         });
     };
 
-    const loop = async (): Promise<void> => {
+    const stay = async (): Promise<void> => {
         cli.println(`\nDealer has ${printHand(dealerHand)}.`);
+        cli.println(`You have ${printHand(playerHand)}.\n`);
+
+        const dealerSum = calcHand(dealerHand);
+        if (dealerSum >= 17) {
+            endGame();
+
+        } else {
+            cli.println(`Dealer hits.`);
+            dealerHand.push(deck.pop()!);
+            stay();
+        }
+    };
+
+    const loop = async (): Promise<void> => {
+        // before player stays, they can only see the first card drawn by dealer
+        const dealerVisible = dealerHand.slice(0, 1);
+        
+        cli.println(`\nDealer has ${printHand(dealerVisible)} visible.`);
         cli.println(`You have ${printHand(playerHand)}.\n`);
 
         const playerSum = calcHand(playerHand);
 
-        if (dealerSum > BLACKJACK || playerSum > BLACKJACK || playerSum > dealerSum) {
-            endGame();
+        if (playerSum >= BLACKJACK) {
+            stay();
 
         } else {
             menu(cli, '(h)it, (s)tay, or (q)uit?', {
@@ -134,7 +152,7 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
                     playerHand.push(deck.pop()!);
                     loop();
                 },
-                s: async () => endGame(),
+                s: async () => stay(),
                 q: async () => exit(),
             });
         }

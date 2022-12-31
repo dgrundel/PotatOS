@@ -720,13 +720,18 @@
             deck.pop(),
             deck.pop()
         ];
-        const dealerSum = calcHand(dealerHand);
+        /**
+         * TODO:
+         * - The dealer's second card should not be revealed until after player stays, busts, or hits blackjack
+         * - After the player stays, the dealer should reveal the second card and hit until at 17 or more
+         */
         const playerHand = [
             deck.pop(),
             deck.pop()
         ];
         const endGame = async () => {
             const playerSum = calcHand(playerHand);
+            const dealerSum = calcHand(dealerHand);
             if (dealerSum > BLACKJACK) {
                 cli.println('Dealer busts! You win!');
             }
@@ -744,12 +749,27 @@
                 n: async () => exit()
             });
         };
-        const loop = async () => {
+        const stay = async () => {
             cli.println(`\nDealer has ${printHand(dealerHand)}.`);
             cli.println(`You have ${printHand(playerHand)}.\n`);
-            const playerSum = calcHand(playerHand);
-            if (dealerSum > BLACKJACK || playerSum > BLACKJACK || playerSum > dealerSum) {
+            const dealerSum = calcHand(dealerHand);
+            if (dealerSum >= 17) {
                 endGame();
+            }
+            else {
+                cli.println(`Dealer hits.`);
+                dealerHand.push(deck.pop());
+                stay();
+            }
+        };
+        const loop = async () => {
+            // before player stays, they can only see the first card drawn by dealer
+            const dealerVisible = dealerHand.slice(0, 1);
+            cli.println(`\nDealer has ${printHand(dealerVisible)} visible.`);
+            cli.println(`You have ${printHand(playerHand)}.\n`);
+            const playerSum = calcHand(playerHand);
+            if (playerSum >= BLACKJACK) {
+                stay();
             }
             else {
                 menu(cli, '(h)it, (s)tay, or (q)uit?', {
@@ -757,7 +777,7 @@
                         playerHand.push(deck.pop());
                         loop();
                     },
-                    s: async () => endGame(),
+                    s: async () => stay(),
                     q: async () => exit(),
                 });
             }
