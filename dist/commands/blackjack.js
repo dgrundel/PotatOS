@@ -64,11 +64,6 @@ const game = async (context) => new Promise(exit => {
         deck.pop(),
         deck.pop()
     ];
-    /**
-     * TODO:
-     * - The dealer's second card should not be revealed until after player stays, busts, or hits blackjack
-     * - After the player stays, the dealer should reveal the second card and hit until at 17 or more
-     */
     const playerHand = [
         deck.pop(),
         deck.pop()
