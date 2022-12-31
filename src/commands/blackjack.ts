@@ -67,14 +67,16 @@ const menu = (
     cli: CLI,
     prompt: string,
     options: Record<string, () => Promise<void>>,
-    def?: () => Promise<void>
+    defaultOption?: () => Promise<void>,
+    inputModifier?: (s: string) => string
 ): Promise<void> => {
     const loop = (): Promise<void> => cli.readln(prompt)
+        .then(input => inputModifier ? inputModifier(input) : input)
         .then(input => {
             if (options.hasOwnProperty(input)) {
                 return options[input].call(undefined);
             } else {
-                return def ? def() : loop();
+                return defaultOption ? defaultOption() : loop();
             }
         });
     return loop();
@@ -113,14 +115,14 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
             cli.println('You lost.');
         }
 
-        menu(cli, 'Play again? (y/n)', {
-            y: async () => game(context).then(exit),
-            n: async () => exit()
-        });
+        menu(cli, 'Play again? (Y/N)', {
+            Y: async () => game(context).then(exit),
+            N: async () => exit()
+        }, undefined, s => s.toUpperCase());
     };
 
     const stay = () => {
-        cli.println(`\nDealer has ${printHand(dealerHand)}.`);
+        cli.println(`Dealer has ${printHand(dealerHand)}.`);
         cli.println(`You have ${printHand(playerHand)}.\n`);
 
         const dealerSum = calcHand(dealerHand);
@@ -128,7 +130,7 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
             endGame();
 
         } else {
-            cli.println(`Dealer hits.`);
+            cli.println(`Dealer hits.\n`);
             dealerHand.push(deck.pop()!);
             
             // add a little delay
@@ -140,7 +142,7 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
         // before player stays, they can only see the first card drawn by dealer
         const dealerVisible = dealerHand.slice(0, 1);
         
-        cli.println(`\nDealer has ${printHand(dealerVisible)} visible.`);
+        cli.println(`Dealer has ${printHand(dealerVisible)} visible.`);
         cli.println(`You have ${printHand(playerHand)}.\n`);
 
         const playerSum = calcHand(playerHand);
@@ -149,14 +151,14 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
             stay();
 
         } else {
-            menu(cli, '(h)it, (s)tay, or (q)uit?', {
-                h: async () => {
+            menu(cli, '(H)it, (S)tay, or (Q)uit?', {
+                H: async () => {
                     playerHand.push(deck.pop()!);
                     loop();
                 },
-                s: async () => stay(),
-                q: async () => exit(),
-            });
+                S: async () => stay(),
+                Q: async () => exit(),
+            }, undefined, s => s.toUpperCase());
         }
     };
 
