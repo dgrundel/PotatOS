@@ -415,6 +415,24 @@
             }
             return stack.reverse().join(SEPARATOR);
         }
+        static async getText(node) {
+            return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    resolve(e.target.result);
+                };
+                reader.readAsText(node.blob);
+            });
+        }
+        static async getDataURL(node) {
+            return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    resolve(e.target.result);
+                };
+                reader.readAsDataURL(node.blob);
+            });
+        }
         resolve(path) {
             const relative = PotatoFS.isRelative(path);
             const resolved = relative ? PotatoFS.join(this.cwd(), path) : path;
@@ -524,21 +542,14 @@
             ].join('\n'),
             invoke: async (context) => {
                 const { args, fs, cli } = context;
-                return new Promise(resolve => {
-                    const node = fs.get(args.trim());
-                    if (PotatoFS.isFile(node)) {
-                        const reader = new FileReader();
-                        reader.onload = e => {
-                            cli.println(e.target.result);
-                            resolve(0);
-                        };
-                        reader.readAsText(node.blob);
-                    }
-                    else {
-                        cli.printerr(`"${node.name}" is not a file.`);
-                        resolve(1);
-                    }
-                });
+                const node = fs.get(args.trim());
+                if (!PotatoFS.isFile(node)) {
+                    cli.printerr(`"${node.name}" is not a file.`);
+                    return 1;
+                }
+                return PotatoFS.getText(node)
+                    .then(text => cli.println(text))
+                    .then(() => 0);
             }
         },
         cd: {
@@ -566,20 +577,19 @@
             invoke: async (context) => {
                 const { args, fs, cli } = context;
                 const node = fs.get(args.trim());
-                if (PotatoFS.isFile(node)) {
-                    cli.println('Preparing your download, just a sec.');
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        const a = document.createElement('a');
-                        a.href = e.target.result;
-                        a.download = node.name;
-                        a.click();
-                    };
-                    reader.readAsDataURL(node.blob);
-                    return 0;
+                if (!PotatoFS.isFile(node)) {
+                    cli.printerr(`"${node.name}" is not a file.`);
+                    return 1;
                 }
-                cli.printerr(`"${node.name}" is not a file.`);
-                return 1;
+                cli.println('Preparing your download, just a sec.');
+                return PotatoFS.getDataURL(node)
+                    .then(url => {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = node.name;
+                    a.click();
+                })
+                    .then(() => 0);
             }
         },
         ls: {
@@ -874,11 +884,17 @@
                 echo: {
                     shortDescription: 'Say something',
                     invoke: async (context) => {
-                        const cli = context.cli;
-                        const env = context.env;
+                        const { cli, env } = context;
                         const str = env.interpolate(context.args);
                         cli.println(str);
                         return 0;
+                    }
+                },
+                html: {
+                    shortDescription: 'Run an HTML "app"',
+                    invoke: async (context) => {
+                        const { cli, args } = context;
+                        return cli.invokeHtml(args.trim(), context);
                     }
                 },
                 potato: {
@@ -1027,6 +1043,35 @@
                 abortController.abort();
                 return value;
             });
+        }
+        async invokeHtml(path, context) {
+            const fs = this.core.fs;
+            const cli = this;
+            const node = fs.get(path);
+            if (!PotatoFS.isFile(node)) {
+                cli.printerr(`"${node.name}" is not a file.`);
+                return 1;
+            }
+            return PotatoFS.getText(node)
+                .then(text => {
+                this.output.style.visibility = 'hidden';
+                const iframe = document.createElement('iframe');
+                iframe.className = 'app-frame';
+                iframe.srcdoc = text;
+                this.output.parentNode.appendChild(iframe);
+                return iframe;
+            })
+                .then(iframe => new Promise(resolve => {
+                iframe.contentWindow.PotatOS = {
+                    context,
+                    exit: () => {
+                        iframe.parentNode.removeChild(iframe);
+                        this.output.style.visibility = 'visible';
+                        resolve();
+                    }
+                };
+            }))
+                .then(() => 0);
         }
         focusInput() {
             this.input.focus();

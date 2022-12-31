@@ -1,4 +1,5 @@
 import { OSID } from './OSCore';
+import { PotatoFS } from './PotatoFS';
 export const PROMPT_ENV_VAR = 'PROMPT';
 export const HISTORY_MAX_ENV_VAR = 'HISTORY_MAX';
 const HISTORY_STORAGE_KEY = 'POTATOS_CLI_HISTORY';
@@ -89,6 +90,35 @@ export class CLI {
             abortController.abort();
             return value;
         });
+    }
+    async invokeHtml(path, context) {
+        const fs = this.core.fs;
+        const cli = this;
+        const node = fs.get(path);
+        if (!PotatoFS.isFile(node)) {
+            cli.printerr(`"${node.name}" is not a file.`);
+            return 1;
+        }
+        return PotatoFS.getText(node)
+            .then(text => {
+            this.output.style.visibility = 'hidden';
+            const iframe = document.createElement('iframe');
+            iframe.className = 'app-frame';
+            iframe.srcdoc = text;
+            this.output.parentNode.appendChild(iframe);
+            return iframe;
+        })
+            .then(iframe => new Promise(resolve => {
+            iframe.contentWindow.PotatOS = {
+                context,
+                exit: () => {
+                    iframe.parentNode.removeChild(iframe);
+                    this.output.style.visibility = 'visible';
+                    resolve();
+                }
+            };
+        }))
+            .then(() => 0);
     }
     focusInput() {
         this.input.focus();

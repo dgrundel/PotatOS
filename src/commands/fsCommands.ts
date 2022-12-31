@@ -13,21 +13,15 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
         invoke: async context => {
             const { args, fs, cli } = context;
             
-            return new Promise(resolve => {
-                const node = fs.get(args.trim());
+            const node = fs.get(args.trim());
+            if (!PotatoFS.isFile(node)) {
+                cli.printerr(`"${node.name}" is not a file.`);
+                return 1;
+            }
 
-                if (PotatoFS.isFile(node)) {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        cli.println(e.target!.result);
-                        resolve(0);
-                    };
-                    reader.readAsText(node.blob);
-                } else {
-                    cli.printerr(`"${node.name}" is not a file.`);
-                    resolve(1);
-                }
-            });
+            return PotatoFS.getText(node)
+                .then(text => cli.println(text))
+                .then(() => 0);
         }
     },
     cd: {
@@ -56,23 +50,21 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
             const { args, fs, cli } = context;
             const node = fs.get(args.trim());
 
-            if (PotatoFS.isFile(node)) {
-                cli.println('Preparing your download, just a sec.');
-
-                const reader = new FileReader();
-                reader.onload = e => {
-                    const a: HTMLAnchorElement = document.createElement('a');
-                    a.href = e.target!.result as string;
-                    a.download = node.name;
-                    a.click();
-                };
-                reader.readAsDataURL(node.blob);
-
-                return 0;
+            if (!PotatoFS.isFile(node)) {
+                cli.printerr(`"${node.name}" is not a file.`);
+                return 1;
             }
 
-            cli.printerr(`"${node.name}" is not a file.`);
-            return 1;
+            cli.println('Preparing your download, just a sec.');
+
+            return PotatoFS.getDataURL(node)
+                .then(url => {
+                    const a: HTMLAnchorElement = document.createElement('a');
+                    a.href = url;
+                    a.download = node.name;
+                    a.click();
+                })
+                .then(() => 0);
         }
     },
     ls: {

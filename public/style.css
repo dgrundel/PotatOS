@@ -84,3 +84,19 @@ body {
     background-size: 100% calc(var(--scan-width) * 2);
     border-radius: 2.5rem;
 }
+.app-frame {
+    --frame-margin: 2rem;
+
+    position: absolute;
+    top: var(--frame-margin);
+    right: var(--frame-margin);
+    bottom: var(--frame-margin);
+    left: var(--frame-margin);
+
+    display: block;
+    width: calc(100% - var(--frame-margin) * 2);
+    height: calc(100% - var(--frame-margin) * 2);
+
+    border: 0 none;
+}
+

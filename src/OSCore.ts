@@ -66,11 +66,17 @@ export class OSCore {
             echo: {
                 shortDescription: 'Say something',
                 invoke: async context => {
-                    const cli = context.cli;
-                    const env = context.env;
+                    const { cli, env } = context;
                     const str = env.interpolate(context.args);
                     cli.println(str);
                     return 0;
+                }
+            },
+            html: {
+                shortDescription: 'Run an HTML "app"',
+                invoke: async context => {
+                    const { cli, args } = context;
+                    return cli.invokeHtml(args.trim(), context);
                 }
             },
             potato: {

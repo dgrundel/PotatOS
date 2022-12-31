@@ -34,6 +34,24 @@ export class PotatoFS {
         }
         return stack.reverse().join(SEPARATOR);
     }
+    static async getText(node) {
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                resolve(e.target.result);
+            };
+            reader.readAsText(node.blob);
+        });
+    }
+    static async getDataURL(node) {
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                resolve(e.target.result);
+            };
+            reader.readAsDataURL(node.blob);
+        });
+    }
     resolve(path) {
         const relative = PotatoFS.isRelative(path);
         const resolved = relative ? PotatoFS.join(this.cwd(), path) : path;

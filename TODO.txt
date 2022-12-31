@@ -1,5 +1,6 @@
-commands/apps
-    nano
+commands
+- text editor
+- clear stored state
     
 basic file system
     mv
@@ -13,8 +14,9 @@ fixme: upload command will overwrite files without prompting
 fixme: ensure file names are unique in a folder
 
 "apps" in iframe
-    access to core libraries via message passing
+  - share CSS
 
-tab completion
-ctrl+c to abort entry
-save state to localstorage
+tab completion?
+ctrl+c to abort/exit?
+save more state to localstorage
+

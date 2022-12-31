@@ -1,4 +1,6 @@
+import { CommandContext } from './command';
 import { OSID, OSCore } from './OSCore';
+import { PotatoFS } from './PotatoFS';
 
 export const PROMPT_ENV_VAR = 'PROMPT';
 export const HISTORY_MAX_ENV_VAR = 'HISTORY_MAX';
@@ -116,6 +118,39 @@ export class CLI {
 
             return value;
         });
+    }
+
+    async invokeHtml(path: string, context: CommandContext): Promise<number> {
+        const fs = this.core.fs;
+        const cli = this;
+        const node = fs.get(path);
+
+        if (!PotatoFS.isFile(node)) {
+            cli.printerr(`"${node.name}" is not a file.`);
+            return 1;
+        }
+
+        return PotatoFS.getText(node)
+            .then(text => {
+                this.output.style.visibility = 'hidden';
+                
+                const iframe = document.createElement('iframe');
+                iframe.className = 'app-frame';
+                iframe.srcdoc = text;
+                this.output.parentNode!.appendChild(iframe);
+                return iframe;
+            })
+            .then(iframe => new Promise<void>(resolve => {
+                (iframe.contentWindow as any).PotatOS = {
+                    context,
+                    exit: () => {
+                        iframe.parentNode!.removeChild(iframe);
+                        this.output.style.visibility = 'visible';
+                        resolve();
+                    }
+                };
+            }))
+            .then(() => 0);
     }
 
     private focusInput(): void {

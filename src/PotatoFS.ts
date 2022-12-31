@@ -64,6 +64,26 @@ export class PotatoFS {
         return stack.reverse().join(SEPARATOR);
     }
 
+    static async getText(node: PotatoFSFile): Promise<string> {
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                resolve(e.target!.result as string);
+            };
+            reader.readAsText(node.blob);
+        });
+    }
+
+    static async getDataURL(node: PotatoFSFile): Promise<string> {
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                resolve(e.target!.result as string);
+            };
+            reader.readAsDataURL(node.blob);
+        });
+    }
+
     resolve(path: string): string {
         const relative = PotatoFS.isRelative(path);
         const resolved = relative ? PotatoFS.join(this.cwd(), path) : path;
