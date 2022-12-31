@@ -2,6 +2,7 @@ import { OSID, OSCore } from './OSCore';
 
 export const PROMPT_ENV_VAR = 'PROMPT';
 export const HISTORY_MAX_ENV_VAR = 'HISTORY_MAX';
+const HISTORY_STORAGE_KEY = 'POTATOS_CLI_HISTORY';
 
 export class CLI {
     private readonly core: OSCore;
@@ -147,6 +148,9 @@ export class CLI {
             if (historyMax >= 0 && this.history.length > historyMax) {
                 this.history = this.history.slice(this.history.length - historyMax);
             }
+            if (window.localStorage) {
+                localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(this.history));
+            }
         }
     };
 
@@ -156,6 +160,23 @@ export class CLI {
 
         this.core.environment.put(HISTORY_MAX_ENV_VAR, 100);
         this.core.environment.put(PROMPT_ENV_VAR, '$CWD $');
+
+        // load history from LocalStorage
+        if (window.localStorage) {
+            const historyJson = localStorage.getItem(HISTORY_STORAGE_KEY);
+            if (historyJson) {
+                try {
+                    const history = JSON.parse(historyJson);
+                    if (Array.isArray(history)) {
+                        this.history.push.apply(this.history, history);
+                    } else {
+                        throw new Error(`"${historyJson}" is not a JSON array.`);
+                    }
+                } catch (e: any) {
+                    this.printerr(`Error loading history from LocalStorage: ${e.message}`);
+                }
+            }
+        }
     
         document.body.addEventListener('click', e => {
             const selection = document.getSelection();
