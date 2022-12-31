@@ -1,10 +1,14 @@
-const faces = {
-    11: 'J',
-    12: 'Q',
-    13: 'K',
-    14: 'A'
-};
-const suits = ['H', 'D', 'S', 'C'];
+const TITLE = `
+▀██▀▀█▄   ▀██                  ▀██         ██                 ▀██      
+ ██   ██   ██   ▄▄▄▄     ▄▄▄▄   ██  ▄▄    ▄▄▄  ▄▄▄▄     ▄▄▄▄   ██  ▄▄  
+ ██▀▀▀█▄   ██  ▀▀ ▄██  ▄█   ▀▀  ██ ▄▀      ██ ▀▀ ▄██  ▄█   ▀▀  ██ ▄▀   
+ ██    ██  ██  ▄█▀ ██  ██       ██▀█▄      ██ ▄█▀ ██  ██       ██▀█▄   
+▄██▄▄▄█▀  ▄██▄ ▀█▄▄▀█▀  ▀█▄▄▄▀ ▄██▄ ██▄    ██ ▀█▄▄▀█▀  ▀█▄▄▄▀ ▄██▄ ██▄ 
+                                        ▄▄ █▀                          
+                                         ▀▀                            
+`;
+const DIVIDER = '════════════════════════════╡ ♥♦♠♣ ╞════════════════════════════';
+const suits = ['♥', '♦', '♠', '♣'];
 const sortedDeck = suits.map(suit => {
     return [
         2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K', 'A'
@@ -54,14 +58,13 @@ const menu = (cli, prompt, options, def) => {
 };
 const game = async (context) => new Promise(exit => {
     const { cli } = context;
+    cli.println(DIVIDER);
     const deck = shuffle(sortedDeck);
-    let dealerSum = 0;
-    const dealerHand = [];
-    while (dealerSum < 17) {
-        const draw = deck.pop();
-        dealerHand.push(draw);
-        dealerSum = calcHand(dealerHand);
-    }
+    const dealerHand = [
+        deck.pop(),
+        deck.pop()
+    ];
+    const dealerSum = calcHand(dealerHand);
     const playerHand = [
         deck.pop(),
         deck.pop()
@@ -108,6 +111,12 @@ const game = async (context) => new Promise(exit => {
 export const BlackjackExecutor = {
     shortDescription: 'Play a game of Blackjack, no chips required',
     invoke: async (context) => {
-        return game(context).then(() => 0);
+        const { cli } = context;
+        cli.println(TITLE);
+        return game(context).then(() => {
+            cli.println(DIVIDER);
+            cli.println('Thanks for playing!');
+            return 0;
+        });
     }
 };

@@ -1,21 +1,25 @@
 import { CLI } from '../CLI';
 import { CommandContext, CommandExecutor } from '../command';
 
-const faces = {
-    11: 'J',
-    12: 'Q',
-    13: 'K',
-    14: 'A'
-};
+const TITLE = `
+▀██▀▀█▄   ▀██                  ▀██         ██                 ▀██      
+ ██   ██   ██   ▄▄▄▄     ▄▄▄▄   ██  ▄▄    ▄▄▄  ▄▄▄▄     ▄▄▄▄   ██  ▄▄  
+ ██▀▀▀█▄   ██  ▀▀ ▄██  ▄█   ▀▀  ██ ▄▀      ██ ▀▀ ▄██  ▄█   ▀▀  ██ ▄▀   
+ ██    ██  ██  ▄█▀ ██  ██       ██▀█▄      ██ ▄█▀ ██  ██       ██▀█▄   
+▄██▄▄▄█▀  ▄██▄ ▀█▄▄▀█▀  ▀█▄▄▄▀ ▄██▄ ██▄    ██ ▀█▄▄▀█▀  ▀█▄▄▄▀ ▄██▄ ██▄ 
+                                        ▄▄ █▀                          
+                                         ▀▀                            
+`;
+const DIVIDER = '════════════════════════════╡ ♥♦♠♣ ╞════════════════════════════';
 
-type Suit = 'H' | 'D' | 'S' | 'C';
+type Suit = '♥'|'♦'|'♠'|'♣';
 interface Card {
     suit: Suit;
     display: string;
     value: number;
 }
 
-const suits: Suit[] = ['H', 'D', 'S', 'C'];
+const suits: Suit[] = ['♥', '♦', '♠', '♣'];
 
 const sortedDeck = suits.map(suit => {
     return [
@@ -76,18 +80,18 @@ const menu = (
     return loop();
 }
 
-
 const game = async (context: CommandContext) => new Promise<void>(exit => {
     const { cli } = context;
+
+    cli.println(DIVIDER);
+
     const deck = shuffle(sortedDeck);
 
-    let dealerSum = 0;
-    const dealerHand: Card[] = [];
-    while (dealerSum < 17) {
-        const draw = deck.pop()!;
-        dealerHand.push(draw);
-        dealerSum = calcHand(dealerHand);
-    }
+    const dealerHand: Card[] = [
+        deck.pop()!,
+        deck.pop()!
+    ];
+    const dealerSum = calcHand(dealerHand);
 
     const playerHand: Card[] = [
         deck.pop()!,
@@ -142,6 +146,14 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
 export const BlackjackExecutor: CommandExecutor = {
     shortDescription: 'Play a game of Blackjack, no chips required',
     invoke: async context => {
-        return game(context).then(() => 0);
+        const { cli } = context;
+        cli.println(TITLE);
+
+        return game(context).then(() => {
+            cli.println(DIVIDER);
+            cli.println('Thanks for playing!');
+
+            return 0;
+        });
     }
 };
