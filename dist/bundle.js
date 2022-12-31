@@ -724,7 +724,7 @@
             deck.pop(),
             deck.pop()
         ];
-        const endGame = async () => {
+        const endGame = () => {
             const playerSum = calcHand(playerHand);
             const dealerSum = calcHand(dealerHand);
             if (dealerSum > BLACKJACK) {
@@ -744,7 +744,7 @@
                 n: async () => exit()
             });
         };
-        const stay = async () => {
+        const stay = () => {
             cli.println(`\nDealer has ${printHand(dealerHand)}.`);
             cli.println(`You have ${printHand(playerHand)}.\n`);
             const dealerSum = calcHand(dealerHand);
@@ -754,10 +754,11 @@
             else {
                 cli.println(`Dealer hits.`);
                 dealerHand.push(deck.pop());
-                stay();
+                // add a little delay
+                setTimeout(stay, 1200);
             }
         };
-        const loop = async () => {
+        const loop = () => {
             // before player stays, they can only see the first card drawn by dealer
             const dealerVisible = dealerHand.slice(0, 1);
             cli.println(`\nDealer has ${printHand(dealerVisible)} visible.`);
