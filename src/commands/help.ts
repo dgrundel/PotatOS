@@ -35,7 +35,7 @@ export class HelpExecutor implements CommandExecutor {
                 .map(cmd => {
                     return [tab + cmd, commands[cmd].shortDescription!];
                 });
-            const table = Formatter.table(values, 2);
+            const table = Formatter.table(values);
             cli.println(table);
         }
 

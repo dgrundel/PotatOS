@@ -6,7 +6,7 @@ export namespace Formatter {
         return str + padding;
     };
 
-    export const table = (rows: string[][], gap: number = 1): string => {
+    export const table = (rows: string[][], gap: number = 2): string => {
         const widths: number[] = [];
         const gapStr = new Array(gap).fill(' ').join('');
 

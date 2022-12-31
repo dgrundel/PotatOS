@@ -8,6 +8,7 @@ import { Environment } from './Environment';
 import { CWD_ENV_VAR, PotatoFS } from './PotatoFS';
 import { FS_COMMANDS } from './commands/fsCommands';
 import { BlackjackExecutor } from './commands/blackjack';
+import { Formatter } from './Formatter';
 export const OSID = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
 const createDefaultFileSystem = (env) => {
@@ -36,6 +37,19 @@ export class OSCore {
             help: new HelpExecutor(),
             history: new HistoryExecutor(),
             set: new SetExecutor(),
+            about: {
+                shortDescription: 'About this project',
+                invoke: async (context) => {
+                    const { cli } = context;
+                    cli.println(OSID);
+                    cli.println(new Array(80).fill('═').join(''));
+                    cli.println(Formatter.table([
+                        ['Source code', 'https://github.com/dgrundel/PotatOS'],
+                        ['Browser support', 'Recent versions of modern browsers.'],
+                    ], 4));
+                    return 0;
+                }
+            },
             clear: {
                 shortDescription: 'Clear the console',
                 invoke: async (context) => {

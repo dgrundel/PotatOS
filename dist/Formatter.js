@@ -4,7 +4,7 @@ export var Formatter;
         const padding = new Array(width - str.length).fill(' ').join('');
         return str + padding;
     };
-    Formatter.table = (rows, gap = 1) => {
+    Formatter.table = (rows, gap = 2) => {
         const widths = [];
         const gapStr = new Array(gap).fill(' ').join('');
         rows.forEach(cols => {

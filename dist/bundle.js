@@ -254,7 +254,7 @@
             const padding = new Array(width - str.length).fill(' ').join('');
             return str + padding;
         };
-        Formatter.table = (rows, gap = 1) => {
+        Formatter.table = (rows, gap = 2) => {
             const widths = [];
             const gapStr = new Array(gap).fill(' ').join('');
             rows.forEach(cols => {
@@ -299,7 +299,7 @@
                     .map(cmd => {
                     return [tab + cmd, commands[cmd].shortDescription];
                 });
-                const table = Formatter.table(values, 2);
+                const table = Formatter.table(values);
                 cli.println(table);
             }
             return 0;
@@ -851,6 +851,19 @@
                 help: new HelpExecutor(),
                 history: new HistoryExecutor(),
                 set: new SetExecutor(),
+                about: {
+                    shortDescription: 'About this project',
+                    invoke: async (context) => {
+                        const { cli } = context;
+                        cli.println(OSID);
+                        cli.println(new Array(80).fill('═').join(''));
+                        cli.println(Formatter.table([
+                            ['Source code', 'https://github.com/dgrundel/PotatOS'],
+                            ['Browser support', 'Recent versions of modern browsers.'],
+                        ], 4));
+                        return 0;
+                    }
+                },
                 clear: {
                     shortDescription: 'Clear the console',
                     invoke: async (context) => {
