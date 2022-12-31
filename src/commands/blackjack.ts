@@ -108,6 +108,9 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
         } else if (playerSum > BLACKJACK) {
             cli.println('You busted! Dealer wins.');
 
+        } else if (playerSum === dealerSum) {
+            cli.println('Push.');
+
         } else if (playerSum > dealerSum) {
             cli.println('You win!');
 
@@ -147,8 +150,11 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
 
         const playerSum = calcHand(playerHand);
 
-        if (playerSum >= BLACKJACK) {
+        if (playerSum === BLACKJACK) {
             stay();
+
+        } else if (playerSum > BLACKJACK) {
+            endGame();
 
         } else {
             menu(cli, '(H)it, (S)tay, or (Q)uit?', {
