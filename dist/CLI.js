@@ -17,6 +17,10 @@ export class CLI {
     getHistory() {
         return this.history.slice();
     }
+    clearHistory() {
+        this.history.splice(0);
+        this.storeHistory();
+    }
     clear() {
         this.output.innerHTML = '';
     }
@@ -120,6 +124,11 @@ export class CLI {
         }))
             .then(() => 0);
     }
+    storeHistory() {
+        if (window.localStorage) {
+            localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(this.history));
+        }
+    }
     focusInput() {
         this.input.focus();
     }
@@ -144,9 +153,7 @@ export class CLI {
             if (historyMax >= 0 && this.history.length > historyMax) {
                 this.history = this.history.slice(this.history.length - historyMax);
             }
-            if (window.localStorage) {
-                localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(this.history));
-            }
+            this.storeHistory();
         }
     }
     ;

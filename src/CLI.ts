@@ -24,6 +24,11 @@ export class CLI {
         return this.history.slice();
     }
 
+    clearHistory(): void {
+        this.history.splice(0);
+        this.storeHistory();
+    }
+
     clear(): void {
         this.output.innerHTML = '';
     }
@@ -153,6 +158,12 @@ export class CLI {
             .then(() => 0);
     }
 
+    private storeHistory() {
+        if (window.localStorage) {
+            localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(this.history));
+        }
+    }
+
     private focusInput(): void {
         this.input.focus();
     }
@@ -183,9 +194,7 @@ export class CLI {
             if (historyMax >= 0 && this.history.length > historyMax) {
                 this.history = this.history.slice(this.history.length - historyMax);
             }
-            if (window.localStorage) {
-                localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(this.history));
-            }
+            this.storeHistory();
         }
     };
 

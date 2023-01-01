@@ -306,14 +306,29 @@
         }
     }
 
-    class HistoryExecutor {
-        shortDescription = 'List previously used commands';
-        async invoke(context) {
-            const cli = context.cli;
-            cli.getHistory().forEach((line, i) => cli.println(i, line));
-            return 0;
+    const HISTORY_COMMANDS = {
+        history: {
+            shortDescription: 'List previously used commands',
+            help: [
+                'Usage:',
+                '  history [--clear]',
+                '',
+                'With no arguments, displays your previously used commands up to $HISTORY_MAX.',
+                '',
+                'When the --clear argument is supplied, clears your stored history.'
+            ].join('\n'),
+            invoke: async (context) => {
+                const { cli, args } = context;
+                if (args.trim() === '--clear') {
+                    cli.clearHistory();
+                }
+                else {
+                    cli.getHistory().forEach((line, i) => cli.println(i, line));
+                }
+                return 0;
+            }
         }
-    }
+    };
 
     const ENV_KEY_TEST_PATTERN = /^[A-Za-z0-9_-]+$/;
     class SetExecutor {
@@ -859,7 +874,6 @@
                 blackjack: BlackjackExecutor,
                 env: new EnvExecutor(),
                 help: new HelpExecutor(),
-                history: new HistoryExecutor(),
                 set: new SetExecutor(),
                 about: {
                     shortDescription: 'About this project',
@@ -915,7 +929,8 @@
                         }
                     })
                 },
-                ...FS_COMMANDS
+                ...HISTORY_COMMANDS,
+                ...FS_COMMANDS,
             };
         }
         getRegisteredCommands() {
@@ -969,6 +984,10 @@
         }
         getHistory() {
             return this.history.slice();
+        }
+        clearHistory() {
+            this.history.splice(0);
+            this.storeHistory();
         }
         clear() {
             this.output.innerHTML = '';
@@ -1073,6 +1092,11 @@
             }))
                 .then(() => 0);
         }
+        storeHistory() {
+            if (window.localStorage) {
+                localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(this.history));
+            }
+        }
         focusInput() {
             this.input.focus();
         }
@@ -1097,9 +1121,7 @@
                 if (historyMax >= 0 && this.history.length > historyMax) {
                     this.history = this.history.slice(this.history.length - historyMax);
                 }
-                if (window.localStorage) {
-                    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(this.history));
-                }
+                this.storeHistory();
             }
         }
         ;

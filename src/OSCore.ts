@@ -2,7 +2,7 @@ import { Chunker } from './Chunker';
 import { AliasExecutor } from './commands/alias';
 import { EnvExecutor } from './commands/env';
 import { HelpExecutor } from './commands/help';
-import { HistoryExecutor } from './commands/history';
+import { HISTORY_COMMANDS } from './commands/history';
 import { CommandExecutor } from './command';
 import { SetExecutor } from './commands/set';
 import { Environment } from './Environment';
@@ -41,7 +41,6 @@ export class OSCore {
             blackjack: BlackjackExecutor,
             env: new EnvExecutor(),
             help: new HelpExecutor(),
-            history: new HistoryExecutor(),
             set: new SetExecutor(),
             about: {
                 shortDescription: 'About this project',
@@ -97,7 +96,8 @@ export class OSCore {
                     }
                 })
             },
-            ...FS_COMMANDS
+            ...HISTORY_COMMANDS,
+            ...FS_COMMANDS,
         };
     }
 
