@@ -105,11 +105,27 @@ export class CLI {
         }
         return PotatoFS.getText(node)
             .then(text => {
+            // hide output element
             this.output.style.visibility = 'hidden';
+            // create iframe and append to body (invisible)
             const iframe = document.createElement('iframe');
             iframe.className = 'app-frame';
-            iframe.srcdoc = text;
+            iframe.style.visibility = 'hidden';
             this.output.parentNode.appendChild(iframe);
+            // link base styles
+            iframe.addEventListener('load', () => {
+                const link = document.createElement('link');
+                link.setAttribute('type', 'text/css');
+                link.setAttribute('rel', 'stylesheet');
+                link.setAttribute('href', './public/base-style.css');
+                iframe.contentDocument.head.appendChild(link);
+                // once styles are loaded, show iframe
+                link.onload = () => {
+                    iframe.style.visibility = 'visible';
+                };
+            });
+            // set iframe content, which will trigger load event
+            iframe.srcdoc = text;
             return iframe;
         })
             .then(iframe => new Promise(resolve => {

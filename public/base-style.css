@@ -1,0 +1,19 @@
+:root {
+    --text-color: #e8c04b;
+    --background-color: #352f1d;
+}
+
+*, *::before, *::after {
+    color: var(--text-color);
+    text-shadow: 0 0 .2em var(--text-color);
+}
+html {
+    font-size: 16px;
+    line-height: 1.25rem;
+    font-family: monospace;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}

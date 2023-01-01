@@ -1,20 +1,10 @@
-*, *::before, *::after {
-    color: var(--text-color);
-    text-shadow: 0 0 .2em var(--text-color);
-}
-html {
-    font-size: 16px;
-    line-height: 1.25rem;
-    font-family: monospace;
-}
-body {
-    --text-color: #e8c04b;
-    --background-color: #352f1d;
+@import url('./base-style.css');
 
+body {
     margin: .25rem;
-    padding: 0;
     background: var(--background-color);
 }
+
 #frame {
     --frame-offset: -3rem;
 
