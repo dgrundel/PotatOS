@@ -712,8 +712,13 @@
                                       ▄▄ █▀                          
                                        ▀▀                            `;
     const DIVIDER = '════════════════════════════╡ ♥♦♠♣ ╞════════════════════════════';
-    const suits = ['♥', '♦', '♠', '♣'];
-    const sortedDeck = suits.map(suit => {
+    const HIDDEN_CARD = {
+        suit: '♠',
+        display: '?',
+        value: 0
+    };
+    const SUITS = ['♥', '♦', '♠', '♣'];
+    const sortedDeck = SUITS.map(suit => {
         return [
             2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K', 'A'
         ].map(display => ({
@@ -744,9 +749,15 @@
         return sum;
     };
     const printHand = (cards) => {
-        const sum = calcHand(cards);
-        const list = cards.map(c => `${c.display}${c.suit}`).join(', ');
-        return `${list} (${sum})`;
+        const gap = ' ';
+        const lines = [
+            cards.map(c => `╭─────╮`).join(gap),
+            cards.map(c => c.display === '?' ? '│░░░░░│' : `│${Formatter.pad(c.display, 2)}   │`).join(gap),
+            cards.map(c => c.display === '?' ? '│░░░░░│' : `│  ${c.suit}  │`).join(gap),
+            cards.map(c => c.display === '?' ? '│░░░░░│' : `│     │`).join(gap),
+            cards.map(c => `╰─────╯`).join(gap)
+        ];
+        return lines.join('\n');
     };
     const menu = (cli, prompt, options, defaultOption, inputModifier) => {
         const loop = () => cli.readln(prompt)
@@ -774,8 +785,8 @@
             deck.pop()
         ];
         const endGame = () => {
-            const playerSum = calcHand(playerHand);
             const dealerSum = calcHand(dealerHand);
+            const playerSum = calcHand(playerHand);
             if (dealerSum > BLACKJACK) {
                 cli.println('Dealer busts! You win!');
             }
@@ -797,9 +808,10 @@
             }, undefined, s => s.toUpperCase());
         };
         const stay = () => {
-            cli.println(`Dealer has ${printHand(dealerHand)}.`);
-            cli.println(`You have ${printHand(playerHand)}.\n`);
             const dealerSum = calcHand(dealerHand);
+            const playerSum = calcHand(playerHand);
+            cli.println(`Dealer hand (${dealerSum}):\n${printHand(dealerHand)}`);
+            cli.println(`Your hand (${playerSum}):\n${printHand(playerHand)}\n`);
             if (dealerSum >= 17) {
                 endGame();
             }
@@ -812,10 +824,11 @@
         };
         const loop = () => {
             // before player stays, they can only see the first card drawn by dealer
-            const dealerVisible = dealerHand.slice(0, 1);
-            cli.println(`Dealer has ${printHand(dealerVisible)} visible.`);
-            cli.println(`You have ${printHand(playerHand)}.\n`);
+            const dealerVisible = dealerHand.slice(0, 1).concat(HIDDEN_CARD);
+            const dealerSum = calcHand(dealerVisible);
             const playerSum = calcHand(playerHand);
+            cli.println(`Dealer hand (${dealerSum}):\n${printHand(dealerVisible)}`);
+            cli.println(`Your hand (${playerSum}):\n${printHand(playerHand)}\n`);
             if (playerSum === BLACKJACK) {
                 stay();
             }

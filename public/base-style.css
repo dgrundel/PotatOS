@@ -1,16 +1,20 @@
+@import url('https://fontlibrary.org/face/dejavu-sans-mono');
+
 :root {
     --text-color: #e8c04b;
     --background-color: #352f1d;
+    --font-family: 'DejaVuSansMonoBook', monospace;
 }
 
 *, *::before, *::after {
     color: var(--text-color);
     text-shadow: 0 0 .2em var(--text-color);
+    font-family: var(--font-family);
 }
 html {
     font-size: 16px;
     line-height: 1.25rem;
-    font-family: monospace;
+    font-family: var(--font-family);
 }
 
 body {

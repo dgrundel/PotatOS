@@ -1,5 +1,6 @@
 import { CLI } from '../CLI';
 import { CommandContext, CommandExecutor } from '../command';
+import { Formatter } from '../Formatter';
 
 const TITLE = `
 ▀██▀▀█▄   ▀██                  ▀██       ██                 ▀██      
@@ -18,9 +19,15 @@ interface Card {
     value: number;
 }
 
-const suits: Suit[] = ['♥', '♦', '♠', '♣'];
+const HIDDEN_CARD: Card = {
+    suit: '♠',
+    display: '?',
+    value: 0
+};
 
-const sortedDeck = suits.map(suit => {
+const SUITS: Suit[] = ['♥', '♦', '♠', '♣'];
+
+const sortedDeck = SUITS.map(suit => {
     return [
         2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K', 'A'
     ].map(display => ({ 
@@ -57,9 +64,15 @@ const calcHand = (cards: Card[]): number => {
 }
 
 const printHand = (cards: Card[]): string => {
-    const sum = calcHand(cards);
-    const list = cards.map(c => `${c.display}${c.suit}`).join(', ');
-    return `${list} (${sum})`;
+    const gap = ' ';
+    const lines: string[] = [
+        cards.map(c => `╭─────╮`).join(gap),
+        cards.map(c => c.display === '?' ? '│░░░░░│' : `│${Formatter.pad(c.display, 2)}   │`).join(gap),
+        cards.map(c => c.display === '?' ? '│░░░░░│' : `│  ${c.suit}  │`).join(gap),
+        cards.map(c => c.display === '?' ? '│░░░░░│' : `│     │`).join(gap),
+        cards.map(c => `╰─────╯`).join(gap)
+    ];
+    return lines.join('\n');
 };
 
 const menu = (
@@ -99,8 +112,8 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
     ];
 
     const endGame = () => {
-        const playerSum = calcHand(playerHand);
         const dealerSum = calcHand(dealerHand);
+        const playerSum = calcHand(playerHand);
 
         if (dealerSum > BLACKJACK) {
             cli.println('Dealer busts! You win!');
@@ -124,10 +137,12 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
     };
 
     const stay = () => {
-        cli.println(`Dealer has ${printHand(dealerHand)}.`);
-        cli.println(`You have ${printHand(playerHand)}.\n`);
-
         const dealerSum = calcHand(dealerHand);
+        const playerSum = calcHand(playerHand);
+        
+        cli.println(`Dealer hand (${dealerSum}):\n${printHand(dealerHand)}`);
+        cli.println(`Your hand (${playerSum}):\n${printHand(playerHand)}\n`);
+
         if (dealerSum >= 17) {
             endGame();
 
@@ -142,12 +157,12 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
 
     const loop = () => {
         // before player stays, they can only see the first card drawn by dealer
-        const dealerVisible = dealerHand.slice(0, 1);
-        
-        cli.println(`Dealer has ${printHand(dealerVisible)} visible.`);
-        cli.println(`You have ${printHand(playerHand)}.\n`);
-
+        const dealerVisible = dealerHand.slice(0, 1).concat(HIDDEN_CARD);
+        const dealerSum = calcHand(dealerVisible);
         const playerSum = calcHand(playerHand);
+        
+        cli.println(`Dealer hand (${dealerSum}):\n${printHand(dealerVisible)}`);
+        cli.println(`Your hand (${playerSum}):\n${printHand(playerHand)}\n`);
 
         if (playerSum === BLACKJACK) {
             stay();
