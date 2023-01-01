@@ -4,7 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && rollup dist/index.js --file dist/bundle.js --format umd --name \"PotatOS\"",
+    "clean": "rm -rf dist",
+    "compile": "tsc && rollup dist/index.js --file dist/bundle.js --format umd --name \"PotatOS\"",
+    "build": "npm run clean && npm run compile",
     "test": "jest"
   },
   "author": "",
