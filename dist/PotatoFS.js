@@ -132,7 +132,7 @@ export class PotatoFS {
                     parent: node,
                     children: {},
                 };
-                node.children[created.name] = created;
+                this.putChild(node, created);
                 node = created;
             }
         }
@@ -146,5 +146,11 @@ export class PotatoFS {
         else {
             return [node];
         }
+    }
+    putChild(parent, child) {
+        if (parent.children.hasOwnProperty(child.name)) {
+            throw new Error(`${parent.name} already contains a file named ${child.name}`);
+        }
+        parent.children[child.name] = child;
     }
 }
