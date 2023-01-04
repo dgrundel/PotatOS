@@ -11,8 +11,7 @@ export class PotatoFS {
         return path.charAt(0) !== SEPARATOR;
     }
     static join(...parts) {
-        // TODO: make smarter, check for relative paths, dots, etc. Check first part for relative
-        return parts.join(SEPARATOR).replace(/\/\//g, SEPARATOR);
+        return parts.join(SEPARATOR).replace(/\/+/g, SEPARATOR);
     }
     static isDir(node) {
         return node && node.hasOwnProperty('children');

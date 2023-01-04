@@ -6,21 +6,45 @@ import { HISTORY_COMMANDS } from './commands/history';
 import { CommandExecutor } from './command';
 import { SetExecutor } from './commands/set';
 import { Environment } from './Environment';
-import { CWD_ENV_VAR, PotatoFS } from './PotatoFS';
+import { CWD_ENV_VAR, PotatoFS, PotatoFSRoot } from './PotatoFS';
 import { FS_COMMANDS } from './commands/fsCommands';
 import { CLI } from './CLI';
 import { BlackjackExecutor } from './commands/blackjack';
 import { Formatter } from './Formatter';
+import { FILESYSTEM_ROOT } from './generated/filesystem';
 
 export const OSID = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
 
 const createDefaultFileSystem = (env: Environment): PotatoFS => {
-    const fs = new PotatoFS({ name: '', children: [] }, env);
-    const homedir = env.interpolate('/home/$USER');
-    fs.mkdirp(homedir);
-    fs.mkdirp('/tmp');
-    fs.cd(homedir);
+    const deserialize = (item: any, nodepath: string) => {
+        const node = { 
+            // make a copy, don't mutate original
+            ...item,
+            
+            // expand env variables in names
+            name: env.interpolate(item.name),
+        };
+        
+        if (PotatoFS.isDir(node)) {
+            node.children = node.children.map(child => {
+                const childPath = PotatoFS.join(nodepath, child.name);
+                return deserialize(child, childPath);
+            });
+
+        } else if (PotatoFS.isFile(node)) {
+            // typeof node.blob === 'string'
+
+        } else {
+            throw new Error('Error initializing file system. Unknown node type: ' + JSON.stringify(node));
+        }
+
+        return node;
+    };
+    
+    const root = deserialize(FILESYSTEM_ROOT, '/') as PotatoFSRoot;
+    const fs = new PotatoFS(root, env);
+    fs.cd(env.interpolate('/home/$USER'));
     return fs;
 };
 

@@ -407,8 +407,7 @@
             return path.charAt(0) !== SEPARATOR;
         }
         static join(...parts) {
-            // TODO: make smarter, check for relative paths, dots, etc. Check first part for relative
-            return parts.join(SEPARATOR).replace(/\/\//g, SEPARATOR);
+            return parts.join(SEPARATOR).replace(/\/+/g, SEPARATOR);
         }
         static isDir(node) {
             return node && node.hasOwnProperty('children');
@@ -861,14 +860,52 @@
         }
     };
 
+    const FILESYSTEM_ROOT = {
+        name: '',
+        children: [
+            {
+                name: 'home',
+                children: [
+                    {
+                        name: '$USER',
+                        children: []
+                    }
+                ]
+            }, {
+                name: 'apps',
+                children: []
+            }, {
+                name: 'tmp',
+                children: []
+            }
+        ]
+    };
+
     const OSID = '🥔 PotatOS 0.1b';
     const commandChunker = new Chunker('', 1);
     const createDefaultFileSystem = (env) => {
-        const fs = new PotatoFS({ name: '', children: [] }, env);
-        const homedir = env.interpolate('/home/$USER');
-        fs.mkdirp(homedir);
-        fs.mkdirp('/tmp');
-        fs.cd(homedir);
+        const deserialize = (item, nodepath) => {
+            const node = {
+                // make a copy, don't mutate original
+                ...item,
+                // expand env variables in names
+                name: env.interpolate(item.name),
+            };
+            if (PotatoFS.isDir(node)) {
+                node.children = node.children.map(child => {
+                    const childPath = PotatoFS.join(nodepath, child.name);
+                    return deserialize(child, childPath);
+                });
+            }
+            else if (PotatoFS.isFile(node)) ;
+            else {
+                throw new Error('Error initializing file system. Unknown node type: ' + JSON.stringify(node));
+            }
+            return node;
+        };
+        const root = deserialize(FILESYSTEM_ROOT, '/');
+        const fs = new PotatoFS(root, env);
+        fs.cd(env.interpolate('/home/$USER'));
         return fs;
     };
     class OSCore {
