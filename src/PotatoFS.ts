@@ -10,7 +10,7 @@ export interface PotatoFSNode {
 }
 
 export interface PotatoFSDir extends PotatoFSNode {
-    children: PotatoFSNode[];
+    children: { [name: string]: PotatoFSNode };
 }
 
 export interface PotatoFSFile extends PotatoFSNode {
@@ -137,7 +137,7 @@ export class PotatoFS {
             }
 
             const name = segments.shift();
-            const found = node.children.find(child => child.name === name);
+            const found = name && node.children[name];
             if (found) {
                 node = found;
             } else {
@@ -166,16 +166,16 @@ export class PotatoFS {
             }
 
             const name = segments.shift();
-            const found = node.children.find(child => child.name === name);
+            const found = name && node.children[name];
             if (found) {
                 node = found;
             } else {
                 const created: PotatoFSDir = { 
                     name: name!,
                     parent: node,
-                    children: [],
+                    children: {},
                 };
-                node.children.push(created);
+                node.children[created.name] = created;
                 node = created;
             }
         }
@@ -187,7 +187,7 @@ export class PotatoFS {
         const node = this.get(path);
 
         if (PotatoFS.isDir(node)) {
-            return node.children.slice();
+            return Object.values(node.children);
         } else {
             return [node];
         }

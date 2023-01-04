@@ -12,34 +12,31 @@ describe('PotatoFS', () => {
         });
         root = {
             name: '',
-            children: [
-                {
+            children: {
+                'home': {
                     name: 'home',
-                    children: [
-                        {
+                    children: {
+                        'spud': {
                             name: 'spud',
-                            children: [
-                                {
+                            children: {
+                                'test.json': {
                                     name: 'test.json',
-                                    blob: new Blob([
-                                        JSON.stringify({ message: 'test' }, null, 2)
-                                    ], {
-                                        type: "application/json",
-                                    })
+                                    blob: new Blob([ JSON.stringify({ message: 'test' }, null, 2) ], { type: "application/json" })
                                 } as PotatoFSFile
-                            ]
+                            }
                         } as PotatoFSDir,
-                        {
+                        
+                        'sprout': {
                             name: 'sprout',
-                            children: []
+                            children: { }
                         } as PotatoFSDir
-                    ]
+                    }
                 } as PotatoFSDir,
-                {
+                'etc': {
                     name: 'etc',
-                    children: []
+                    children: {}
                 } as PotatoFSDir
-            ]
+            }
         };
         fs = new PotatoFS(root, env);
     });

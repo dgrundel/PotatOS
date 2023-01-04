@@ -1,20 +1,22 @@
 export const FILESYSTEM_ROOT = {
     name: '',
-    children: [
-        {
+    children: {
+        'home': {
             name: 'home',
-            children: [
-                {
+            children: {
+                '$USER': {
                     name: '$USER',
-                    children: []
+                    children: {}
                 }
-            ]
-        }, {
+            }
+        },
+        'apps': {
             name: 'apps',
-            children: []
-        }, {
+            children: {}
+        },
+        'tmp': {
             name: 'tmp',
-            children: []
+            children: {}
         }
-    ]
+    }
 };

@@ -493,7 +493,7 @@
                     throw new Error(`Unexpected non-directory node "${node.name}"`);
                 }
                 const name = segments.shift();
-                const found = node.children.find(child => child.name === name);
+                const found = name && node.children[name];
                 if (found) {
                     node = found;
                 }
@@ -518,7 +518,7 @@
                     throw new Error(`Unexpected non-directory node "${node.name}"`);
                 }
                 const name = segments.shift();
-                const found = node.children.find(child => child.name === name);
+                const found = name && node.children[name];
                 if (found) {
                     node = found;
                 }
@@ -526,9 +526,9 @@
                     const created = {
                         name: name,
                         parent: node,
-                        children: [],
+                        children: {},
                     };
-                    node.children.push(created);
+                    node.children[created.name] = created;
                     node = created;
                 }
             }
@@ -537,7 +537,7 @@
         list(path) {
             const node = this.get(path);
             if (PotatoFS.isDir(node)) {
-                return node.children.slice();
+                return Object.values(node.children);
             }
             else {
                 return [node];
@@ -651,15 +651,7 @@
                 const { args, fs, cli } = context;
                 const node = fs.get(args.trim());
                 if (PotatoFS.isFile(node)) {
-                    const i = node.parent.children.findIndex(n => n === node);
-                    if (i !== -1) {
-                        node.parent.children.splice(i, 1);
-                    }
-                    else {
-                        // wtf
-                        cli.printerr(`Internal error.`);
-                        return 1;
-                    }
+                    delete node.parent.children[node.name];
                 }
                 else {
                     cli.printerr(`${node.name} is not a file.`);
@@ -692,7 +684,7 @@
                             parent: cwd,
                             blob: file
                         };
-                        cwd.children.push(fsnode);
+                        cwd.children[fsnode.name] = fsnode;
                         cli.println(`${file.name} (${file.size} bytes) uploaded to ${fs.cwd()}`);
                     });
                 });
@@ -862,23 +854,25 @@
 
     const FILESYSTEM_ROOT = {
         name: '',
-        children: [
-            {
+        children: {
+            'home': {
                 name: 'home',
-                children: [
-                    {
+                children: {
+                    '$USER': {
                         name: '$USER',
-                        children: []
+                        children: {}
                     }
-                ]
-            }, {
+                }
+            },
+            'apps': {
                 name: 'apps',
-                children: []
-            }, {
+                children: {}
+            },
+            'tmp': {
                 name: 'tmp',
-                children: []
+                children: {}
             }
-        ]
+        }
     };
 
     const OSID = '🥔 PotatOS 0.1b';
@@ -892,10 +886,14 @@
                 name: env.interpolate(item.name),
             };
             if (PotatoFS.isDir(node)) {
-                node.children = node.children.map(child => {
-                    const childPath = PotatoFS.join(nodepath, child.name);
+                node.children = Object.keys(node.children).map(name => {
+                    const child = node.children[name];
+                    const childPath = PotatoFS.join(nodepath, name);
                     return deserialize(child, childPath);
-                });
+                }).reduce((map, child) => {
+                    map[child.name] = child;
+                    return map;
+                }, {});
             }
             else if (PotatoFS.isFile(node)) ;
             else {

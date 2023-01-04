@@ -105,15 +105,7 @@ export const FS_COMMANDS = {
             const { args, fs, cli } = context;
             const node = fs.get(args.trim());
             if (PotatoFS.isFile(node)) {
-                const i = node.parent.children.findIndex(n => n === node);
-                if (i !== -1) {
-                    node.parent.children.splice(i, 1);
-                }
-                else {
-                    // wtf
-                    cli.printerr(`Internal error.`);
-                    return 1;
-                }
+                delete node.parent.children[node.name];
             }
             else {
                 cli.printerr(`${node.name} is not a file.`);
@@ -146,7 +138,7 @@ export const FS_COMMANDS = {
                         parent: cwd,
                         blob: file
                     };
-                    cwd.children.push(fsnode);
+                    cwd.children[fsnode.name] = fsnode;
                     cli.println(`${file.name} (${file.size} bytes) uploaded to ${fs.cwd()}`);
                 });
             });

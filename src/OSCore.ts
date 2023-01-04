@@ -6,7 +6,7 @@ import { HISTORY_COMMANDS } from './commands/history';
 import { CommandExecutor } from './command';
 import { SetExecutor } from './commands/set';
 import { Environment } from './Environment';
-import { CWD_ENV_VAR, PotatoFS, PotatoFSRoot } from './PotatoFS';
+import { CWD_ENV_VAR, PotatoFS, PotatoFSNode, PotatoFSRoot } from './PotatoFS';
 import { FS_COMMANDS } from './commands/fsCommands';
 import { CLI } from './CLI';
 import { BlackjackExecutor } from './commands/blackjack';
@@ -27,10 +27,14 @@ const createDefaultFileSystem = (env: Environment): PotatoFS => {
         };
         
         if (PotatoFS.isDir(node)) {
-            node.children = node.children.map(child => {
-                const childPath = PotatoFS.join(nodepath, child.name);
+            node.children = Object.keys(node.children).map(name => {
+                const child = node.children[name];
+                const childPath = PotatoFS.join(nodepath, name);
                 return deserialize(child, childPath);
-            });
+            }).reduce((map, child) => {
+                map[child.name] = child;
+                return map;
+            }, {} as { [name: string]: PotatoFSNode });
 
         } else if (PotatoFS.isFile(node)) {
             // typeof node.blob === 'string'

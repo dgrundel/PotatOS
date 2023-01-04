@@ -97,7 +97,7 @@ export class PotatoFS {
                 throw new Error(`Unexpected non-directory node "${node.name}"`);
             }
             const name = segments.shift();
-            const found = node.children.find(child => child.name === name);
+            const found = name && node.children[name];
             if (found) {
                 node = found;
             }
@@ -122,7 +122,7 @@ export class PotatoFS {
                 throw new Error(`Unexpected non-directory node "${node.name}"`);
             }
             const name = segments.shift();
-            const found = node.children.find(child => child.name === name);
+            const found = name && node.children[name];
             if (found) {
                 node = found;
             }
@@ -130,9 +130,9 @@ export class PotatoFS {
                 const created = {
                     name: name,
                     parent: node,
-                    children: [],
+                    children: {},
                 };
-                node.children.push(created);
+                node.children[created.name] = created;
                 node = created;
             }
         }
@@ -141,7 +141,7 @@ export class PotatoFS {
     list(path) {
         const node = this.get(path);
         if (PotatoFS.isDir(node)) {
-            return node.children.slice();
+            return Object.values(node.children);
         }
         else {
             return [node];

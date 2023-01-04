@@ -21,10 +21,14 @@ const createDefaultFileSystem = (env) => {
             name: env.interpolate(item.name),
         };
         if (PotatoFS.isDir(node)) {
-            node.children = node.children.map(child => {
-                const childPath = PotatoFS.join(nodepath, child.name);
+            node.children = Object.keys(node.children).map(name => {
+                const child = node.children[name];
+                const childPath = PotatoFS.join(nodepath, name);
                 return deserialize(child, childPath);
-            });
+            }).reduce((map, child) => {
+                map[child.name] = child;
+                return map;
+            }, {});
         }
         else if (PotatoFS.isFile(node)) {
             // typeof node.blob === 'string'
