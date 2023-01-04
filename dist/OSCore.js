@@ -12,33 +12,33 @@ import { Formatter } from './Formatter';
 import { FILESYSTEM_ROOT } from './generated/filesystem';
 export const OSID = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
-const createDefaultFileSystem = (env) => {
-    const deserialize = (item, nodepath) => {
-        const node = {
-            // make a copy, don't mutate original
-            ...item,
-            // expand env variables in names
-            name: env.interpolate(item.name),
-        };
-        if (PotatoFS.isDir(node)) {
-            node.children = Object.keys(node.children).map(name => {
-                const child = node.children[name];
-                const childPath = PotatoFS.join(nodepath, name);
-                return deserialize(child, childPath);
-            }).reduce((map, child) => {
-                map[child.name] = child;
-                return map;
-            }, {});
-        }
-        else if (PotatoFS.isFile(node)) {
-            // typeof node.blob === 'string'
-        }
-        else {
-            throw new Error('Error initializing file system. Unknown node type: ' + JSON.stringify(node));
-        }
-        return node;
+const deserializeFS = (item, nodepath, env) => {
+    const node = {
+        // make a copy, don't mutate original
+        ...item,
+        // expand env variables in names
+        name: env.interpolate(item.name),
     };
-    const root = deserialize(FILESYSTEM_ROOT, '/');
+    if (PotatoFS.isDir(node)) {
+        node.children = Object.keys(node.children).map(name => {
+            const child = node.children[name];
+            const childPath = PotatoFS.join(nodepath, name);
+            return deserializeFS(child, childPath, env);
+        }).reduce((map, child) => {
+            map[child.name] = child;
+            return map;
+        }, {});
+    }
+    else if (PotatoFS.isFile(node)) {
+        // typeof node.blob === 'string'
+    }
+    else {
+        throw new Error('Error initializing file system. Unknown node type: ' + JSON.stringify(node));
+    }
+    return node;
+};
+const createDefaultFileSystem = (env) => {
+    const root = deserializeFS(FILESYSTEM_ROOT, '/', env);
     const fs = new PotatoFS(root, env);
     fs.cd(env.interpolate('/home/$USER'));
     return fs;
