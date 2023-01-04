@@ -6,7 +6,8 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc && rollup dist/index.js --file dist/bundle.js --format umd --name \"PotatOS\"",
-    "build": "npm run clean && npm run compile",
+    "build": "npm run clean && npm run generateFS && npm run test && npm run compile",
+    "generateFS": "node generateFS.js",
     "test": "jest"
   },
   "author": "",

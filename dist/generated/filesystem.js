@@ -1,22 +1,27 @@
 export const FILESYSTEM_ROOT = {
-    name: '',
-    children: {
-        'home': {
-            name: 'home',
-            children: {
-                '$USER': {
-                    name: '$USER',
-                    children: {}
+    "name": "",
+    "children": {
+        "apps": {
+            "name": "apps",
+            "children": {}
+        },
+        "home": {
+            "name": "home",
+            "children": {
+                "$USER": {
+                    "name": "$USER",
+                    "children": {}
                 }
             }
         },
-        'apps': {
-            name: 'apps',
-            children: {}
-        },
-        'tmp': {
-            name: 'tmp',
-            children: {}
+        "tmp": {
+            "name": "tmp",
+            "children": {
+                "test.txt": {
+                    "name": "test.txt",
+                    "blob": "data:text/plain;base64,aGVsbG8h"
+                }
+            }
         }
     }
 };

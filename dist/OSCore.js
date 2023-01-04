@@ -12,6 +12,13 @@ import { Formatter } from './Formatter';
 import { FILESYSTEM_ROOT } from './generated/filesystem';
 export const OSID = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
+const dataURLtoBlob = (dataurl) => {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+};
 const deserializeFS = (item, nodepath, env) => {
     const node = {
         // make a copy, don't mutate original
@@ -30,7 +37,9 @@ const deserializeFS = (item, nodepath, env) => {
         }, {});
     }
     else if (PotatoFS.isFile(node)) {
-        // typeof node.blob === 'string'
+        if (typeof node.blob === 'string') {
+            node.blob = dataURLtoBlob(node.blob);
+        }
     }
     else {
         throw new Error('Error initializing file system. Unknown node type: ' + JSON.stringify(node));
