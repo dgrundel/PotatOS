@@ -12,3 +12,9 @@ tab completion?
 ctrl+c to abort/exit?
 save more state to localstorage
 env var interpolation in more places
+
+connect to github? dropbox?
+
+apps
+    $PATH
+    execute without html command (e.g. `./example.html` should just run)
