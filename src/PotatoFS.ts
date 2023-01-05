@@ -175,7 +175,7 @@ export class PotatoFS {
                     parent: node,
                     children: {},
                 };
-                this.putChild(node, created);
+                this.put(node, created);
                 node = created;
             }
         }
@@ -193,7 +193,7 @@ export class PotatoFS {
         }
     }
 
-    putChild(parent: PotatoFSDir, child: PotatoFSNode) {
+    put(parent: PotatoFSDir, child: PotatoFSNode) {
         if (parent.children.hasOwnProperty(child.name)) {
             throw new Error(`${parent.name} already contains a file named ${child.name}`);
         }

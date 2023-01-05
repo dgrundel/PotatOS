@@ -138,7 +138,7 @@ export const FS_COMMANDS = {
                         parent: cwd,
                         blob: file
                     };
-                    fs.putChild(cwd, fsnode);
+                    fs.put(cwd, fsnode);
                     cli.println(`${file.name} (${file.size} bytes) uploaded to ${fs.cwd()}`);
                 });
             });

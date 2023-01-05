@@ -152,7 +152,7 @@ export const FS_COMMANDS: Record<string, CommandExecutor> = {
                         blob: file
                     };
                     
-                    fs.putChild(cwd, fsnode);
+                    fs.put(cwd, fsnode);
 
                     cli.println(`${file.name} (${file.size} bytes) uploaded to ${fs.cwd()}`);
                 });

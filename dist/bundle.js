@@ -552,7 +552,7 @@
                         parent: node,
                         children: {},
                     };
-                    this.putChild(node, created);
+                    this.put(node, created);
                     node = created;
                 }
             }
@@ -567,7 +567,7 @@
                 return [node];
             }
         }
-        putChild(parent, child) {
+        put(parent, child) {
             if (parent.children.hasOwnProperty(child.name)) {
                 throw new Error(`${parent.name} already contains a file named ${child.name}`);
             }
@@ -714,7 +714,7 @@
                             parent: cwd,
                             blob: file
                         };
-                        fs.putChild(cwd, fsnode);
+                        fs.put(cwd, fsnode);
                         cli.println(`${file.name} (${file.size} bytes) uploaded to ${fs.cwd()}`);
                     });
                 });
