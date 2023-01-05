@@ -172,17 +172,25 @@ export class CLI {
                 return iframe;
             })
             .then(iframe => new Promise<Error | undefined>(resolve => {
-                (iframe.contentWindow as any).PotatOS = {
+                const framewindow: Window = iframe.contentWindow!;
+                const exit = (err?: string) => {
+                    iframe.parentNode!.removeChild(iframe);
+                    this.output.style.visibility = 'visible';
+                    
+                    resolve(err ? new Error(`App exited with error: ${err}`) : undefined);
+                };
+
+                (framewindow as any).PotatOS = {
                     Chunker,
                     PotatoFS,
                     context,
-                    exit: (err?: string) => {
-                        iframe.parentNode!.removeChild(iframe);
-                        this.output.style.visibility = 'visible';
-                        
-                        resolve(err ? new Error(`App exited with error: ${err}`) : undefined);
-                    }
+                    exit
                 };
+
+                // exit if unhandled error occurs
+                framewindow.addEventListener('error', e => {
+                    exit(e.message);
+                });
             }))
             .then(err => err || 0);
     }
