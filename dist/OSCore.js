@@ -12,6 +12,7 @@ import { Formatter } from './Formatter';
 import { FILESYSTEM_ROOT } from './generated/filesystem';
 export const OSID = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
+// lifted from: https://stackoverflow.com/a/30407959
 const dataURLtoBlob = (dataurl) => {
     var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
     while (n--) {
@@ -48,9 +49,7 @@ const deserializeFS = (item, nodepath, env) => {
 };
 const createDefaultFileSystem = (env) => {
     const root = deserializeFS(FILESYSTEM_ROOT, '/', env);
-    const fs = new PotatoFS(root, env);
-    fs.cd(env.interpolate('/home/$USER'));
-    return fs;
+    return new PotatoFS(root, env);
 };
 export class OSCore {
     environment;

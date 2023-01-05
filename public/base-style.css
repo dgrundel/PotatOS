@@ -1,12 +1,14 @@
 @import url('https://fontlibrary.org/face/dejavu-sans-mono');
 
-:root {
+[data-theme="potatos-base"] {
     --text-color: #e8c04b;
     --background-color: #352f1d;
     --font-family: 'DejaVuSansMonoBook', monospace;
 }
 
-*, *::before, *::after {
+[data-theme="potatos-base"] *,
+[data-theme="potatos-base"] *::before, 
+[data-theme="potatos-base"] *::after {
     color: var(--text-color);
     text-shadow: 0 0 .2em var(--text-color);
     font-family: var(--font-family);

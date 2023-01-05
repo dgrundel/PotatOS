@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example App</title>
+    <style>
+        .box {
+            padding: 2rem;
+            margin: 2rem auto;
+            width: 40vw;
+            border: 2px double;
+        }
+    </style>
+</head>
+<body data-theme="potatos-base">
+    <div class="box">
+        <p>This is a simple example HTML "app".</p>
+        <p>
+            <a href="#" id="exit">Click here to exit.</a>
+        </p>
+    </div>
+
+    <script>
+        document.getElementById('exit').addEventListener('click', e => {
+            e.preventDefault();
+            PotatOS.exit();
+        });
+    </script>
+</body>
+</html>

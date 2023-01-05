@@ -16,6 +16,7 @@ import { FILESYSTEM_ROOT } from './generated/filesystem';
 export const OSID = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
 
+// lifted from: https://stackoverflow.com/a/30407959
 const dataURLtoBlob = (dataurl: string): Blob => {
     var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)![1],
         bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
@@ -58,9 +59,7 @@ const deserializeFS = <T extends PotatoFSNode>(item: T, nodepath: string, env: E
 
 const createDefaultFileSystem = (env: Environment): PotatoFS => {
     const root = deserializeFS(FILESYSTEM_ROOT as PotatoFSRoot, '/', env);
-    const fs = new PotatoFS(root, env);
-    fs.cd(env.interpolate('/home/$USER'));
-    return fs;
+    return new PotatoFS(root, env);
 };
 
 export class OSCore {

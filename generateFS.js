@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
+// TODO: support additional mimes
 const serializeFile = (filepath) => {
     // const mime = 'image/png'; 
     const mime = 'text/plain'; 
