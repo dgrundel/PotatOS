@@ -103,7 +103,7 @@ export class OSCore {
                     const { cli, args } = context;
                     const chunks = new Chunker().append(args.trim()).flush();
                     const htmlPath = chunks.shift().content; // remove html file path from chunks
-                    const htmlArgs = chunks.map(chunk => chunk.content).join('');
+                    const htmlArgs = Chunker.join(chunks);
                     const htmlContext = {
                         ...context,
                         args: htmlArgs

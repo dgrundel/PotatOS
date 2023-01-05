@@ -123,5 +123,39 @@ describe('Chunker', () => {
             new Chunk(' ', ChunkType.WHITESPACE),
             new Chunk('quick')
         ]);
-    })
+    });
+
+    describe('escape', () => {
+        it('escapes provided chars with slashes', () => {
+            expect(Chunker.escape("Don't blink", "'"))
+                .toBe("Don\\'t blink");
+        })
+    });
+    
+    describe('join', () => {
+        it('joins chunks to string', () => {
+            const original = "hello, world!";
+            const chunks = new Chunker().append(original).flush();
+            const joined = Chunker.join(chunks);
+            expect(chunks.length).toBe(3);
+            expect(joined).toBe(original);
+        });
+
+        it('reinstates double quotes', () => {
+            const original = `"He is Peter Pan, you know, mother."
+            At first Mrs. Darling did not know`;
+            const chunks = new Chunker().append(original).flush();
+            const joined = Chunker.join(chunks);
+            expect(chunks.length).toBe(15);
+            expect(joined).toBe(original);
+        });
+        
+        it('re-escapes quotes', () => {
+            const original = `"Oh no, he isn\\"t grown up," Wendy assured her confidently`;
+            const chunks = new Chunker().append(original).flush();
+            const joined = Chunker.join(chunks);
+            expect(chunks.length).toBe(9);
+            expect(joined).toBe(original);
+        });
+    });
 });

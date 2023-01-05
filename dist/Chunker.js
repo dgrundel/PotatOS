@@ -139,4 +139,28 @@ export class Chunker {
         }
         this.buffer += ch;
     }
+    static escape(value, charsToEscape) {
+        const charMap = charsToEscape.split('').reduce((map, char) => {
+            map[char] = true;
+            return map;
+        }, {});
+        return value.split('')
+            .map(char => charMap[char] ? ('\\' + char) : char)
+            .join('');
+    }
+    static join(chunks) {
+        return chunks.map(chunk => {
+            if (chunk.type === ChunkType.DOUBLE_QUOTED) {
+                // escape slashes and double quotes
+                const escaped = Chunker.escape(chunk.content, '"\\');
+                return `"${escaped}"`;
+            }
+            else if (chunk.type === ChunkType.SINGLE_QUOTED) {
+                // escape slashes and single quotes
+                const escaped = Chunker.escape(chunk.content, "'\\");
+                return `'${escaped}'`;
+            }
+            return chunk.content;
+        }).join('');
+    }
 }
