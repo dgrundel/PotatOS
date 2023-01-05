@@ -1,10 +1,20 @@
 const fs = require('fs');
 const path = require('path');
 
+const MIME_TYPES = {
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.json': 'application/json',
+    '.gif': 'image/gif',
+    '.txt': 'text/plain',
+    '.html': 'text/html',
+    '.css': 'text/css',
+};
+
 // TODO: support additional mimes
 const serializeFile = (filepath) => {
-    // const mime = 'image/png'; 
-    const mime = 'text/plain'; 
+    const mime = MIME_TYPES[path.extname(filepath)] || 'text/plain'; 
     const encoding = 'base64'; 
     const data = fs.readFileSync(filepath).toString(encoding); 
     return 'data:' + mime + ';' + encoding + ',' + data; 
