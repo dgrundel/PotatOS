@@ -1,10 +1,10 @@
 export var ChunkType;
 (function (ChunkType) {
-    ChunkType[ChunkType["WHITESPACE"] = 0] = "WHITESPACE";
-    ChunkType[ChunkType["DELIMITER"] = 1] = "DELIMITER";
-    ChunkType[ChunkType["DOUBLE_QUOTED"] = 2] = "DOUBLE_QUOTED";
-    ChunkType[ChunkType["SINGLE_QUOTED"] = 3] = "SINGLE_QUOTED";
-    ChunkType[ChunkType["OTHER"] = 4] = "OTHER";
+    ChunkType["WHITESPACE"] = "WHITESPACE";
+    ChunkType["DELIMITER"] = "DELIMITER";
+    ChunkType["DOUBLE_QUOTED"] = "DOUBLE_QUOTED";
+    ChunkType["SINGLE_QUOTED"] = "SINGLE_QUOTED";
+    ChunkType["OTHER"] = "OTHER";
 })(ChunkType || (ChunkType = {}));
 export class Chunk {
     content;

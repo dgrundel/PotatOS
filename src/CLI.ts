@@ -1,6 +1,7 @@
 import { CommandContext } from './command';
 import { OSID, OSCore } from './OSCore';
 import { PotatoFS } from './PotatoFS';
+import { Chunker } from './Chunker';
 
 export const PROMPT_ENV_VAR = 'PROMPT';
 export const HISTORY_MAX_ENV_VAR = 'HISTORY_MAX';
@@ -125,7 +126,7 @@ export class CLI {
         });
     }
 
-    async invokeHtml(path: string, context: CommandContext): Promise<number> {
+    async invokeHtml(path: string, context: CommandContext): Promise<number | Error> {
         const fs = this.core.fs;
         const cli = this;
         const node = fs.get(path);
@@ -148,11 +149,17 @@ export class CLI {
 
                 // link base styles
                 iframe.addEventListener('load', () => {
+                    const framedoc = iframe.contentDocument!;
+
                     const link = document.createElement('link');
                     link.setAttribute('type', 'text/css');
                     link.setAttribute('rel', 'stylesheet');
                     link.setAttribute('href', './public/base-style.css');
-                    iframe.contentDocument!.head.appendChild(link);
+                    framedoc.head.appendChild(link);
+
+                    if (framedoc.body.dataset.theme === 'inherit') {
+                        framedoc.body.dataset.theme = document.body.dataset.theme;
+                    }
 
                     // once styles are loaded, show iframe
                     link.onload = () => {
@@ -164,17 +171,20 @@ export class CLI {
                 iframe.srcdoc = text;
                 return iframe;
             })
-            .then(iframe => new Promise<void>(resolve => {
+            .then(iframe => new Promise<Error | undefined>(resolve => {
                 (iframe.contentWindow as any).PotatOS = {
+                    Chunker,
+                    PotatoFS,
                     context,
-                    exit: () => {
+                    exit: (err?: string) => {
                         iframe.parentNode!.removeChild(iframe);
                         this.output.style.visibility = 'visible';
-                        resolve();
+                        
+                        resolve(err ? new Error(`App exited with error: ${err}`) : undefined);
                     }
                 };
             }))
-            .then(() => 0);
+            .then(err => err || 0);
     }
 
     private storeHistory() {

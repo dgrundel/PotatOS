@@ -24,3 +24,13 @@ body {
     margin: 0;
     padding: 0;
 }
+
+[data-theme="yukon-gold"] button {
+    background-color: var(--text-color);
+    border: 0 none;
+    color: var(--background-color);
+    font-size: inherit;
+    padding: .5em 1em;
+    font-weight: bold;
+    text-shadow: none;
+}

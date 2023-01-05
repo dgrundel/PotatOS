@@ -1,9 +1,9 @@
 export enum ChunkType {
-    WHITESPACE,
-    DELIMITER,
-    DOUBLE_QUOTED,
-    SINGLE_QUOTED,
-    OTHER
+    WHITESPACE = 'WHITESPACE',
+    DELIMITER = 'DELIMITER',
+    DOUBLE_QUOTED = 'DOUBLE_QUOTED',
+    SINGLE_QUOTED = 'SINGLE_QUOTED',
+    OTHER = 'OTHER',
 }
 
 export class Chunk {

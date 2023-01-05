@@ -1,4 +1,4 @@
-import { Chunker } from './Chunker';
+import { Chunker, ChunkType } from './Chunker';
 import { AliasExecutor } from './commands/alias';
 import { EnvExecutor } from './commands/env';
 import { HelpExecutor } from './commands/help';
@@ -113,7 +113,14 @@ export class OSCore {
                 shortDescription: 'Run an HTML "app"',
                 invoke: async context => {
                     const { cli, args } = context;
-                    return cli.invokeHtml(args.trim(), context);
+                    const chunks = new Chunker().append(args.trim()).flush();
+                    const htmlPath = chunks.shift()!.content; // remove html file path from chunks
+                    const htmlArgs = chunks.map(chunk => chunk.content).join('');
+                    const htmlContext = {
+                        ...context,
+                        args: htmlArgs
+                    };
+                    return cli.invokeHtml(htmlPath, htmlContext);
                 }
             },
             potato: {
