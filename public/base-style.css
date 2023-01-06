@@ -1,19 +1,5 @@
 @import url('https://fontlibrary.org/face/dejavu-sans-mono');
 
-[data-theme="yukon-gold"] {
-    --text-color: #e8c04b;
-    --background-color: #352f1d;
-    --font-family: 'DejaVuSansMonoBook', monospace;
-}
-
-[data-theme="yukon-gold"] *,
-[data-theme="yukon-gold"] *::before, 
-[data-theme="yukon-gold"] *::after {
-    color: var(--text-color);
-    text-shadow: 0 0 .2em var(--text-color);
-    font-family: var(--font-family);
-}
-
 html {
     font-size: 16px;
     line-height: 1.25rem;
@@ -25,12 +11,46 @@ body {
     padding: 0;
 }
 
+[data-theme="yukon-gold"] {
+    --text-color: #e8c04b;
+    --background-color: #352f1d;
+    --font-family: 'DejaVuSansMonoBook', monospace;
+    --text-shadow: 0 0 .2em var(--text-color);
+
+    --button-text-color: var(--background-color);
+    --button-background-color: var(--text-color);
+    --button-background-hover-color: #cc9e54;
+
+    color: var(--text-color);
+    text-shadow: var(--text-shadow);
+    font-family: var(--font-family);
+}
+
 [data-theme="yukon-gold"] button {
-    background-color: var(--text-color);
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
     border: 0 none;
-    color: var(--background-color);
-    font-size: inherit;
     padding: .5em 1em;
     font-weight: bold;
     text-shadow: none;
+}
+
+button {
+    font-size: inherit;
+    font-family: inherit;
+}
+
+button:hover {
+    background-color: var(--button-background-hover-color);
+}
+
+textarea {
+    background-color: transparent;
+    color: var(--text-color);
+    text-shadow: var(--text-shadow);
+    font-size: inherit;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    outline: none;
 }

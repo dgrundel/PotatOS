@@ -38,8 +38,11 @@ body {
 }
 [data-prompt]::before {
     --text-color: #c1be94;
+
     content: attr(data-prompt);
     padding-right: 1ex;
+    color: var(--text-color);
+    text-shadow: var(--text-shadow);
 }
 #out {
     white-space: pre-wrap;
