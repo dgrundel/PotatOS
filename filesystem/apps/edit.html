@@ -77,6 +77,15 @@
             savedContent = text;
         });
 
+        contentElement.addEventListener('input', e => {
+            const brs = contentElement.getElementsByTagName('br');
+            let i = brs.length;
+            while (i--) {
+                const n = document.createTextNode("\n");
+                brs[i].parentNode.replaceChild(n, brs[i]);
+            }
+        });
+
         document.getElementById('save').addEventListener('click', e => {
             e.preventDefault();
             save();
