@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editor</title>
     <style>
+        :root {
+            --gap: .75rem;
+        }
         #main {
             position: fixed;
             top: 0;
@@ -15,55 +18,74 @@
 
             display: grid;
             grid-template-columns: 1fr;
-            grid-template-rows: 1fr auto;
-            gap: .75rem;
+            grid-template-rows: auto 1fr auto;
+            gap: var(--gap);
         }
         #content {
             white-space: pre-wrap;
             outline: none;
         }
-        #tools {
+        header {
+            border-bottom: 1px double;
+            padding-bottom: var(--gap);
+        }
+        footer {
             border-top: 1px double;
-            padding-top: .75rem;
+            padding-top: var(--gap);
         }
     </style>
 </head>
 <body data-theme="inherit">
     <div id="main">
+        <header>
+            <div id="filename"></div>
+        </header>
         <div id="content" contenteditable></div>
-        <div id="tools">
+        <footer>
+            <button id="save">Save</button>
             <button id="exit">Exit</button>
-        </div>
+        </footer>
     </div>
 
     <script>
-        const init = () => {
-            const PotatoFS = PotatOS.PotatoFS;
-            const context = PotatOS.context;
-            const node = context.fs.get(context.args.trim());
-            if (!PotatoFS.isFile(node)) {
-                throw new Error(`"${node.name}" is not a file.`);
+        const contentElement = document.getElementById('content');
+        const PotatoFS = PotatOS.PotatoFS;
+        const context = PotatOS.context;
+        const node = context.fs.get(context.args.trim());
+        let savedContent;
+
+        const save = () => {
+            const text = contentElement.textContent;
+
+            if (text === savedContent) {
+                return;
             }
 
-            PotatoFS.getText(node)
-                .then(text => {
-                    document.getElementById('content').textContent = text;
-                })
-                // .catch(err => {
-                    // PotatOS.exit(err);
-                // });
-
-            document.getElementById('exit').addEventListener('click', e => {
-                e.preventDefault();
-                PotatOS.exit();
-            });
+            const blob = new Blob([text], {type: node.blob.type});
+            node.blob = blob;
+            savedContent = text;
         };
 
-        try {
-            init();
-        } catch(e) {
-            PotatOS.exit(e instanceof Error ? e : new Error(e.message));
+        if (!PotatoFS.isFile(node)) {
+            throw new Error(`"${node.name}" is not a file.`);
         }
+
+        PotatoFS.getText(node).then(text => {
+            document.getElementById('filename').textContent = PotatoFS.getAbsolutePath(node);
+
+            contentElement.textContent = text;
+            savedContent = text;
+        });
+
+        document.getElementById('save').addEventListener('click', e => {
+            e.preventDefault();
+            save();
+        });
+
+        document.getElementById('exit').addEventListener('click', e => {
+            e.preventDefault();
+            PotatOS.exit();
+        });
     </script>
 </body>
 </html>

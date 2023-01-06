@@ -19,6 +19,7 @@ export interface PotatoFSFile extends PotatoFSNode {
 
 export interface PotatoFSRoot extends PotatoFSDir {
     name: '';
+    parent?: undefined;
 }
 
 export class PotatoFS {

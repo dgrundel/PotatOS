@@ -20,18 +20,19 @@ const dataURLtoBlob = (dataurl) => {
     }
     return new Blob([u8arr], { type: mime });
 };
-const deserializeFS = (item, nodepath, env) => {
+const deserializeFS = (item, nodepath, parent, env) => {
     const node = {
         // make a copy, don't mutate original
         ...item,
         // expand env variables in names
         name: env.interpolate(item.name),
+        parent,
     };
     if (PotatoFS.isDir(node)) {
         node.children = Object.keys(node.children).map(name => {
             const child = node.children[name];
             const childPath = PotatoFS.join(nodepath, name);
-            return deserializeFS(child, childPath, env);
+            return deserializeFS(child, childPath, node, env);
         }).reduce((map, child) => {
             map[child.name] = child;
             return map;
@@ -48,7 +49,7 @@ const deserializeFS = (item, nodepath, env) => {
     return node;
 };
 const createDefaultFileSystem = (env) => {
-    const root = deserializeFS(FILESYSTEM_ROOT, '/', env);
+    const root = deserializeFS(FILESYSTEM_ROOT, '/', undefined, env);
     return new PotatoFS(root, env);
 };
 export class OSCore {
