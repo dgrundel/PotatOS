@@ -75,9 +75,9 @@ body {
     border-radius: 2.5rem;
 }
 .app-frame {
-    --frame-margin: 2rem;
+    --frame-margin: 3rem;
 
-    position: absolute;
+    position: fixed;
     top: var(--frame-margin);
     right: var(--frame-margin);
     bottom: var(--frame-margin);

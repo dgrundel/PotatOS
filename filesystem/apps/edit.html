@@ -22,8 +22,14 @@
             gap: var(--gap);
         }
         #content {
+            height: 100%;
+            width: 100%;
+            border: 0;
+            margin: 0;
+            padding: 0;
             white-space: pre-wrap;
             outline: none;
+            background-color: transparent;
         }
         header {
             border-bottom: 1px double;
@@ -40,7 +46,7 @@
         <header>
             <div id="filename"></div>
         </header>
-        <div id="content" contenteditable></div>
+        <textarea id="content" cols="80" rows="50"></textarea>
         <footer>
             <button id="save">Save</button>
             <button id="exit">Exit</button>
@@ -48,22 +54,15 @@
     </div>
 
     <script>
-        const contentElement = document.getElementById('content');
+        const textarea = document.getElementById('content');
         const PotatoFS = PotatOS.PotatoFS;
         const context = PotatOS.context;
         const node = context.fs.get(context.args.trim());
-        let savedContent;
-
+        
         const save = () => {
-            const text = contentElement.textContent;
-
-            if (text === savedContent) {
-                return;
-            }
-
+            const text = textarea.value;
             const blob = new Blob([text], {type: node.blob.type});
             node.blob = blob;
-            savedContent = text;
         };
 
         if (!PotatoFS.isFile(node)) {
@@ -73,17 +72,7 @@
         PotatoFS.getText(node).then(text => {
             document.getElementById('filename').textContent = PotatoFS.getAbsolutePath(node);
 
-            contentElement.textContent = text;
-            savedContent = text;
-        });
-
-        contentElement.addEventListener('input', e => {
-            const brs = contentElement.getElementsByTagName('br');
-            let i = brs.length;
-            while (i--) {
-                const n = document.createTextNode("\n");
-                brs[i].parentNode.replaceChild(n, brs[i]);
-            }
+            textarea.value = text;
         });
 
         document.getElementById('save').addEventListener('click', e => {
