@@ -1010,6 +1010,7 @@
         environment;
         fs;
         commands;
+        executableExtensions;
         constructor() {
             this.environment = new Environment({
                 [CWD_ENV_VAR]: '/',
@@ -1052,6 +1053,9 @@
                 ...ENV_COMMANDS,
                 ...FS_COMMANDS,
             };
+            this.executableExtensions = {
+                '.html': 'html'
+            };
         }
         getRegisteredCommands() {
             return this.commands;
@@ -1066,12 +1070,13 @@
             const trimmed = line.trim();
             let cmd = commandChunker.append(trimmed).flush()[0].content;
             let args = trimmed.substring(cmd.length).trim();
-            if (PotatoFS.extname(cmd) === '.html') {
+            const ext = PotatoFS.extname(cmd);
+            if (ext && this.executableExtensions[ext]) {
                 try {
                     const node = this.fs.get(cmd);
                     if (PotatoFS.isFile(node)) {
                         args = `${cmd} ${args}`;
-                        cmd = 'html';
+                        cmd = this.executableExtensions[ext];
                     }
                 }
                 catch (e) {

@@ -24,6 +24,7 @@ export class OSCore {
     readonly environment;
     readonly fs: PotatoFS;
     private readonly commands: Record<string, CommandExecutor>;
+    private readonly executableExtensions: Record<string, string>;
 
     constructor() {
         this.environment = new Environment({
@@ -67,6 +68,9 @@ export class OSCore {
             ...ENV_COMMANDS,
             ...FS_COMMANDS,
         };
+        this.executableExtensions = {
+            '.html': 'html'
+        };
     }
 
     getRegisteredCommands(): Record<string, CommandExecutor> {
@@ -86,12 +90,13 @@ export class OSCore {
         let cmd = commandChunker.append(trimmed).flush()[0].content;
         let args = trimmed.substring(cmd.length).trim();
 
-        if (PotatoFS.extname(cmd) === '.html') {
+        const ext = PotatoFS.extname(cmd);
+        if (ext && this.executableExtensions[ext]) {
             try {
                 const node = this.fs.get(cmd);
                 if (PotatoFS.isFile(node)) {
                     args = `${cmd} ${args}`;
-                    cmd = 'html';
+                    cmd = this.executableExtensions[ext];
                 }
             } catch(e) {
                 // do nothing
