@@ -144,7 +144,7 @@ const game = async (context) => new Promise(exit => {
     };
     loop();
 });
-export const BlackjackExecutor = {
+export const BLACKJACK_EXECUTOR = {
     shortDescription: 'Play a game of Blackjack, no chips required',
     invoke: async (context) => {
         const { cli } = context;

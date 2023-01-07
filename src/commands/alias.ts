@@ -9,21 +9,21 @@ class UserDefinedAlias implements CommandExecutor {
     }
 
     async invoke(context: CommandContext) {
-        const { cli, core } = context;
-        return core.invokeCommand(this.command, cli);
+        const { cli, core, args } = context;
+        const invocation = `${this.command} ${args}`;
+        return core.invokeCommand(invocation, cli);
     }
 }
 
-export class AliasExecutor implements CommandExecutor {
-    readonly disallowOverride = true;
-    readonly shortDescription: string = 'List and create aliases for commands';
-
-    async invoke(context: CommandContext) {
+export const ALIAS_EXECUTOR: CommandExecutor = {
+    disallowOverride: true,
+    shortDescription: 'List and create aliases for commands',
+    invoke: async (context: CommandContext) => {
         const { cli, core } = context;
         const args = context.args.trim();
         
         if (args.length > 0) {
-            const pairs = parseKeyValuePairs(context.args);
+            const pairs = parseKeyValuePairs(args);
             pairs.forEach(item => {
                 if (!isKeyValuePair(item)) {
                     cli.printerr(item.message);

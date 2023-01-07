@@ -1,5 +1,5 @@
 import { Chunker } from './Chunker';
-import { AliasExecutor } from './commands/alias';
+import { ALIAS_EXECUTOR } from './commands/alias';
 import { EnvExecutor } from './commands/env';
 import { HelpExecutor } from './commands/help';
 import { HISTORY_COMMANDS } from './commands/history';
@@ -7,7 +7,7 @@ import { SetExecutor } from './commands/set';
 import { Environment } from './Environment';
 import { CWD_ENV_VAR, PotatoFS } from './PotatoFS';
 import { FS_COMMANDS } from './commands/fsCommands';
-import { BlackjackExecutor } from './commands/blackjack';
+import { BLACKJACK_EXECUTOR } from './commands/blackjack';
 import { Formatter } from './Formatter';
 import { FILESYSTEM_ROOT } from './generated/filesystem';
 export const OSID = '🥔 PotatOS 0.1b';
@@ -64,8 +64,8 @@ export class OSCore {
         });
         this.fs = createDefaultFileSystem(this.environment);
         this.commands = {
-            alias: new AliasExecutor(),
-            blackjack: BlackjackExecutor,
+            alias: ALIAS_EXECUTOR,
+            blackjack: BLACKJACK_EXECUTOR,
             env: new EnvExecutor(),
             help: new HelpExecutor(),
             set: new SetExecutor(),

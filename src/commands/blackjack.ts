@@ -185,7 +185,7 @@ const game = async (context: CommandContext) => new Promise<void>(exit => {
     loop();
 });
 
-export const BlackjackExecutor: CommandExecutor = {
+export const BLACKJACK_EXECUTOR: CommandExecutor = {
     shortDescription: 'Play a game of Blackjack, no chips required',
     invoke: async context => {
         const { cli } = context;

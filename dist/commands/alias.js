@@ -5,18 +5,19 @@ class UserDefinedAlias {
         this.command = command;
     }
     async invoke(context) {
-        const { cli, core } = context;
-        return core.invokeCommand(this.command, cli);
+        const { cli, core, args } = context;
+        const invocation = `${this.command} ${args}`;
+        return core.invokeCommand(invocation, cli);
     }
 }
-export class AliasExecutor {
-    disallowOverride = true;
-    shortDescription = 'List and create aliases for commands';
-    async invoke(context) {
+export const ALIAS_EXECUTOR = {
+    disallowOverride: true,
+    shortDescription: 'List and create aliases for commands',
+    invoke: async (context) => {
         const { cli, core } = context;
         const args = context.args.trim();
         if (args.length > 0) {
-            const pairs = parseKeyValuePairs(context.args);
+            const pairs = parseKeyValuePairs(args);
             pairs.forEach(item => {
                 if (!isKeyValuePair(item)) {
                     cli.printerr(item.message);
@@ -50,4 +51,4 @@ export class AliasExecutor {
         }
         return 0;
     }
-}
+};
