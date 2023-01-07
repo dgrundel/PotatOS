@@ -154,3 +154,39 @@ export class PotatoFS {
         parent.children[child.name] = child;
     }
 }
+// lifted from: https://stackoverflow.com/a/30407959
+export const dataURLtoBlob = (dataurl) => {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+};
+export const deserializeFS = (item, nodepath, parent, env) => {
+    const node = {
+        // make a copy, don't mutate original
+        ...item,
+        // expand env variables in names
+        name: env.interpolate(item.name),
+        parent,
+    };
+    if (PotatoFS.isDir(node)) {
+        node.children = Object.keys(node.children).map(name => {
+            const child = node.children[name];
+            const childPath = PotatoFS.join(nodepath, name);
+            return deserializeFS(child, childPath, node, env);
+        }).reduce((map, child) => {
+            map[child.name] = child;
+            return map;
+        }, {});
+    }
+    else if (PotatoFS.isFile(node)) {
+        if (typeof node.blob === 'string') {
+            node.blob = dataURLtoBlob(node.blob);
+        }
+    }
+    else {
+        throw new Error('Error initializing file system. Unknown node type: ' + JSON.stringify(node));
+    }
+    return node;
+};

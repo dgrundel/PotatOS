@@ -1,12 +1,11 @@
 import { Chunker } from './Chunker';
 import { ALIAS_EXECUTOR } from './commands/alias';
-import { EnvExecutor } from './commands/env';
-import { HelpExecutor } from './commands/help';
-import { HISTORY_COMMANDS } from './commands/history';
+import { ENV_COMMANDS } from './commands/envCommands';
+import { HELP_EXECUTOR } from './commands/help';
+import { CLI_COMMANDS } from './commands/cliCommands';
 import { CommandExecutor } from './command';
-import { SetExecutor } from './commands/set';
 import { Environment } from './Environment';
-import { CWD_ENV_VAR, PotatoFS, PotatoFSNode, PotatoFSRoot } from './PotatoFS';
+import { CWD_ENV_VAR, deserializeFS, PotatoFS, PotatoFSRoot } from './PotatoFS';
 import { FS_COMMANDS } from './commands/fsCommands';
 import { CLI } from './CLI';
 import { BLACKJACK_EXECUTOR } from './commands/blackjack';
@@ -15,48 +14,6 @@ import { FILESYSTEM_ROOT } from './generated/filesystem';
 
 export const OSID = '🥔 PotatOS 0.1b';
 const commandChunker = new Chunker('', 1);
-
-// lifted from: https://stackoverflow.com/a/30407959
-const dataURLtoBlob = (dataurl: string): Blob => {
-    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)![1],
-        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-    while(n--){
-        u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new Blob([u8arr], {type:mime});
-}
-
-const deserializeFS = <T extends PotatoFSNode>(item: T, nodepath: string, parent: PotatoFSNode | undefined, env: Environment): T => {
-    const node = { 
-        // make a copy, don't mutate original
-        ...item,
-        
-        // expand env variables in names
-        name: env.interpolate(item.name),
-        parent,
-    };
-    
-    if (PotatoFS.isDir(node)) {
-        node.children = Object.keys(node.children).map(name => {
-            const child = node.children[name];
-            const childPath = PotatoFS.join(nodepath, name);
-            return deserializeFS(child, childPath, node, env);
-        }).reduce((map, child) => {
-            map[child.name] = child;
-            return map;
-        }, {} as { [name: string]: PotatoFSNode });
-
-    } else if (PotatoFS.isFile(node)) {
-        if (typeof node.blob === 'string') {
-            node.blob = dataURLtoBlob(node.blob);
-        }
-
-    } else {
-        throw new Error('Error initializing file system. Unknown node type: ' + JSON.stringify(node));
-    }
-
-    return node;
-};
 
 const createDefaultFileSystem = (env: Environment): PotatoFS => {
     const root = deserializeFS(FILESYSTEM_ROOT as PotatoFSRoot, '/', undefined, env);
@@ -78,9 +35,7 @@ export class OSCore {
         this.commands = {
             alias: ALIAS_EXECUTOR,
             blackjack: BLACKJACK_EXECUTOR,
-            env: new EnvExecutor(),
-            help: new HelpExecutor(),
-            set: new SetExecutor(),
+            help: HELP_EXECUTOR,
             about: {
                 shortDescription: 'About this project',
                 invoke: async context => {
@@ -91,22 +46,6 @@ export class OSCore {
                         ['Source code', 'https://github.com/dgrundel/PotatOS'],
                         ['Browser support', 'Recent versions of modern browsers.'],
                     ], 4));
-                    return 0;
-                }
-            },
-            clear: {
-                shortDescription: 'Clear the console',
-                invoke: async context => {
-                    context.cli.clear();
-                    return 0;
-                }
-            },
-            echo: {
-                shortDescription: 'Say something',
-                invoke: async context => {
-                    const { cli, env } = context;
-                    const str = env.interpolate(context.args);
-                    cli.println(str);
                     return 0;
                 }
             },
@@ -124,25 +63,8 @@ export class OSCore {
                     return cli.invokeHtml(htmlPath, htmlContext);
                 }
             },
-            potato: {
-                shortDescription: 'Print a cute, little potato',
-                invoke: async context => {
-                    context.cli.println('🥔');
-                    return 0;
-                }
-            },
-            sleep: {
-                shortDescription: 'Wait a while',
-                invoke: async context => new Promise(resolve => {
-                    const { cli, args } = context;
-                    const seconds = +(args.trim());
-                    if (seconds > 0) {
-                        cli.println(`Sleeping for ${seconds} seconds.`);
-                        setTimeout(resolve, seconds * 1000);
-                    }
-                })
-            },
-            ...HISTORY_COMMANDS,
+            ...CLI_COMMANDS,
+            ...ENV_COMMANDS,
             ...FS_COMMANDS,
         };
     }
@@ -160,12 +82,13 @@ export class OSCore {
     }
 
     async invokeCommand(line: string, cli: CLI): Promise<number | Error> {
-        const cmd = commandChunker.append(line).flush()[0].content;
+        const trimmed = line.trim();
+        const cmd = commandChunker.append(trimmed).flush()[0].content;
 
         // run command
         if (this.commands.hasOwnProperty(cmd)) {
             const executor = this.commands[cmd];
-            const args = line.substring(cmd.length).trim();
+            const args = trimmed.substring(cmd.length).trim();
 
             try {
                 return executor.invoke({

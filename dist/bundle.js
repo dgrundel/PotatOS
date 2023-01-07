@@ -262,16 +262,40 @@
         }
     };
 
-    class EnvExecutor {
-        shortDescription = 'Display environment values';
-        async invoke(context) {
-            const { cli, env } = context;
-            env.keys().sort().forEach(key => {
-                cli.println(key + '=' + env.getString(key));
-            });
-            return 0;
+    const ENV_KEY_TEST_PATTERN = /^[A-Za-z0-9_-]+$/;
+    const ENV_COMMANDS = {
+        env: {
+            shortDescription: 'Display environment values',
+            invoke: async (context) => {
+                const { cli, env } = context;
+                env.keys().sort().forEach(key => {
+                    cli.println(key + '=' + env.getString(key));
+                });
+                return 0;
+            }
+        },
+        set: {
+            shortDescription: 'Set an environment value',
+            invoke: async (context) => {
+                const { cli, env } = context;
+                const pairs = parseKeyValuePairs(context.args);
+                pairs.forEach(pair => {
+                    if (isKeyValuePair(pair)) {
+                        if (ENV_KEY_TEST_PATTERN.test(pair.key)) {
+                            env.put(pair.key, pair.value);
+                        }
+                        else {
+                            cli.printerr(`Error: ${pair.key} must match pattern ${ENV_KEY_TEST_PATTERN.toString()}`);
+                        }
+                    }
+                    else {
+                        cli.printerr(pair.message);
+                    }
+                });
+                return 0;
+            }
         }
-    }
+    };
 
     var Formatter;
     (function (Formatter) {
@@ -295,10 +319,10 @@
         };
     })(Formatter || (Formatter = {}));
 
-    class HelpExecutor {
-        shortDescription = 'Prints this message';
-        help = new Array(1024).fill('help').join(' ');
-        async invoke(context) {
+    const HELP_EXECUTOR = {
+        shortDescription: 'Prints this message',
+        help: new Array(1024).fill('help').join(' '),
+        invoke: async (context) => {
             const { core, cli, env, args } = context;
             const commands = core.getRegisteredCommands();
             const tab = env.getString('TAB');
@@ -329,9 +353,25 @@
             }
             return 0;
         }
-    }
+    };
 
-    const HISTORY_COMMANDS = {
+    const CLI_COMMANDS = {
+        clear: {
+            shortDescription: 'Clear the console',
+            invoke: async (context) => {
+                context.cli.clear();
+                return 0;
+            }
+        },
+        echo: {
+            shortDescription: 'Say something',
+            invoke: async (context) => {
+                const { cli, env } = context;
+                const str = env.interpolate(context.args);
+                cli.println(str);
+                return 0;
+            }
+        },
         history: {
             shortDescription: 'List previously used commands',
             help: [
@@ -352,31 +392,26 @@
                 }
                 return 0;
             }
+        },
+        potato: {
+            shortDescription: 'Print a cute, little potato',
+            invoke: async (context) => {
+                context.cli.println('🥔');
+                return 0;
+            }
+        },
+        sleep: {
+            shortDescription: 'Wait a while',
+            invoke: async (context) => new Promise(resolve => {
+                const { cli, args } = context;
+                const seconds = +(args.trim());
+                if (seconds > 0) {
+                    cli.println(`Sleeping for ${seconds} seconds.`);
+                    setTimeout(resolve, seconds * 1000);
+                }
+            })
         }
     };
-
-    const ENV_KEY_TEST_PATTERN = /^[A-Za-z0-9_-]+$/;
-    class SetExecutor {
-        shortDescription = 'Set an environment value';
-        async invoke(context) {
-            const { cli, env } = context;
-            const pairs = parseKeyValuePairs(context.args);
-            pairs.forEach(pair => {
-                if (isKeyValuePair(pair)) {
-                    if (ENV_KEY_TEST_PATTERN.test(pair.key)) {
-                        env.put(pair.key, pair.value);
-                    }
-                    else {
-                        cli.printerr(`Error: ${pair.key} must match pattern ${ENV_KEY_TEST_PATTERN.toString()}`);
-                    }
-                }
-                else {
-                    cli.printerr(pair.message);
-                }
-            });
-            return 0;
-        }
-    }
 
     const ENV_REPLACE_PATTERN = /\$([a-zA-Z0-9_-]+)/g;
     class Environment {
@@ -575,6 +610,42 @@
             parent.children[child.name] = child;
         }
     }
+    // lifted from: https://stackoverflow.com/a/30407959
+    const dataURLtoBlob = (dataurl) => {
+        var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+    };
+    const deserializeFS = (item, nodepath, parent, env) => {
+        const node = {
+            // make a copy, don't mutate original
+            ...item,
+            // expand env variables in names
+            name: env.interpolate(item.name),
+            parent,
+        };
+        if (PotatoFS.isDir(node)) {
+            node.children = Object.keys(node.children).map(name => {
+                const child = node.children[name];
+                const childPath = PotatoFS.join(nodepath, name);
+                return deserializeFS(child, childPath, node, env);
+            }).reduce((map, child) => {
+                map[child.name] = child;
+                return map;
+            }, {});
+        }
+        else if (PotatoFS.isFile(node)) {
+            if (typeof node.blob === 'string') {
+                node.blob = dataURLtoBlob(node.blob);
+            }
+        }
+        else {
+            throw new Error('Error initializing file system. Unknown node type: ' + JSON.stringify(node));
+        }
+        return node;
+    };
 
     const FS_COMMANDS = {
         cat: {
@@ -926,42 +997,6 @@
 
     const OSID = '🥔 PotatOS 0.1b';
     const commandChunker = new Chunker('', 1);
-    // lifted from: https://stackoverflow.com/a/30407959
-    const dataURLtoBlob = (dataurl) => {
-        var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-        while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
-        }
-        return new Blob([u8arr], { type: mime });
-    };
-    const deserializeFS = (item, nodepath, parent, env) => {
-        const node = {
-            // make a copy, don't mutate original
-            ...item,
-            // expand env variables in names
-            name: env.interpolate(item.name),
-            parent,
-        };
-        if (PotatoFS.isDir(node)) {
-            node.children = Object.keys(node.children).map(name => {
-                const child = node.children[name];
-                const childPath = PotatoFS.join(nodepath, name);
-                return deserializeFS(child, childPath, node, env);
-            }).reduce((map, child) => {
-                map[child.name] = child;
-                return map;
-            }, {});
-        }
-        else if (PotatoFS.isFile(node)) {
-            if (typeof node.blob === 'string') {
-                node.blob = dataURLtoBlob(node.blob);
-            }
-        }
-        else {
-            throw new Error('Error initializing file system. Unknown node type: ' + JSON.stringify(node));
-        }
-        return node;
-    };
     const createDefaultFileSystem = (env) => {
         const root = deserializeFS(FILESYSTEM_ROOT, '/', undefined, env);
         return new PotatoFS(root, env);
@@ -980,9 +1015,7 @@
             this.commands = {
                 alias: ALIAS_EXECUTOR,
                 blackjack: BLACKJACK_EXECUTOR,
-                env: new EnvExecutor(),
-                help: new HelpExecutor(),
-                set: new SetExecutor(),
+                help: HELP_EXECUTOR,
                 about: {
                     shortDescription: 'About this project',
                     invoke: async (context) => {
@@ -993,22 +1026,6 @@
                             ['Source code', 'https://github.com/dgrundel/PotatOS'],
                             ['Browser support', 'Recent versions of modern browsers.'],
                         ], 4));
-                        return 0;
-                    }
-                },
-                clear: {
-                    shortDescription: 'Clear the console',
-                    invoke: async (context) => {
-                        context.cli.clear();
-                        return 0;
-                    }
-                },
-                echo: {
-                    shortDescription: 'Say something',
-                    invoke: async (context) => {
-                        const { cli, env } = context;
-                        const str = env.interpolate(context.args);
-                        cli.println(str);
                         return 0;
                     }
                 },
@@ -1026,25 +1043,8 @@
                         return cli.invokeHtml(htmlPath, htmlContext);
                     }
                 },
-                potato: {
-                    shortDescription: 'Print a cute, little potato',
-                    invoke: async (context) => {
-                        context.cli.println('🥔');
-                        return 0;
-                    }
-                },
-                sleep: {
-                    shortDescription: 'Wait a while',
-                    invoke: async (context) => new Promise(resolve => {
-                        const { cli, args } = context;
-                        const seconds = +(args.trim());
-                        if (seconds > 0) {
-                            cli.println(`Sleeping for ${seconds} seconds.`);
-                            setTimeout(resolve, seconds * 1000);
-                        }
-                    })
-                },
-                ...HISTORY_COMMANDS,
+                ...CLI_COMMANDS,
+                ...ENV_COMMANDS,
                 ...FS_COMMANDS,
             };
         }
@@ -1058,11 +1058,12 @@
             this.commands[name] = command;
         }
         async invokeCommand(line, cli) {
-            const cmd = commandChunker.append(line).flush()[0].content;
+            const trimmed = line.trim();
+            const cmd = commandChunker.append(trimmed).flush()[0].content;
             // run command
             if (this.commands.hasOwnProperty(cmd)) {
                 const executor = this.commands[cmd];
-                const args = line.substring(cmd.length).trim();
+                const args = trimmed.substring(cmd.length).trim();
                 try {
                     return executor.invoke({
                         command: cmd,

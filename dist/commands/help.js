@@ -1,8 +1,8 @@
 import { Formatter } from '../Formatter';
-export class HelpExecutor {
-    shortDescription = 'Prints this message';
-    help = new Array(1024).fill('help').join(' ');
-    async invoke(context) {
+export const HELP_EXECUTOR = {
+    shortDescription: 'Prints this message',
+    help: new Array(1024).fill('help').join(' '),
+    invoke: async (context) => {
         const { core, cli, env, args } = context;
         const commands = core.getRegisteredCommands();
         const tab = env.getString('TAB');
@@ -33,4 +33,4 @@ export class HelpExecutor {
         }
         return 0;
     }
-}
+};

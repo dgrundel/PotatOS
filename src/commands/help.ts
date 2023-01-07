@@ -1,11 +1,11 @@
 import { CommandContext, CommandExecutor } from "../command";
 import { Formatter } from '../Formatter';
 
-export class HelpExecutor implements CommandExecutor {
-    readonly shortDescription: string = 'Prints this message';
-    readonly help: string = new Array(1024).fill('help').join(' ');
+export const HELP_EXECUTOR: CommandExecutor = {
+    shortDescription: 'Prints this message',
+    help: new Array(1024).fill('help').join(' '),
 
-    async invoke(context: CommandContext) {
+    invoke: async (context: CommandContext) => {
         const { core, cli, env, args } = context;
         const commands = core.getRegisteredCommands();
         const tab = env.getString('TAB');
