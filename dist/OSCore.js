@@ -73,11 +73,23 @@ export class OSCore {
     }
     async invokeCommand(line, cli) {
         const trimmed = line.trim();
-        const cmd = commandChunker.append(trimmed).flush()[0].content;
+        let cmd = commandChunker.append(trimmed).flush()[0].content;
+        let args = trimmed.substring(cmd.length).trim();
+        if (PotatoFS.extname(cmd) === '.html') {
+            try {
+                const node = this.fs.get(cmd);
+                if (PotatoFS.isFile(node)) {
+                    args = `${cmd} ${args}`;
+                    cmd = 'html';
+                }
+            }
+            catch (e) {
+                // do nothing
+            }
+        }
         // run command
         if (this.commands.hasOwnProperty(cmd)) {
             const executor = this.commands[cmd];
-            const args = trimmed.substring(cmd.length).trim();
             try {
                 return executor.invoke({
                     command: cmd,

@@ -39,6 +39,12 @@ export class PotatoFS {
         return parts.join(SEPARATOR).replace(/\/+/g, SEPARATOR);
     }
 
+    static extname(path: string): string {
+        const trimmed = path;
+        const i = trimmed.lastIndexOf('.');
+        return i === -1 ? '' : trimmed.substring(i);
+    }
+
     static isDir(node: PotatoFSNode): node is PotatoFSDir {
         return node && node.hasOwnProperty('children');
     }

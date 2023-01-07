@@ -13,6 +13,11 @@ export class PotatoFS {
     static join(...parts) {
         return parts.join(SEPARATOR).replace(/\/+/g, SEPARATOR);
     }
+    static extname(path) {
+        const trimmed = path;
+        const i = trimmed.lastIndexOf('.');
+        return i === -1 ? '' : trimmed.substring(i);
+    }
     static isDir(node) {
         return node && node.hasOwnProperty('children');
     }
